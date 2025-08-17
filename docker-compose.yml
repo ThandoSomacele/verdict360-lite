@@ -1,0 +1,163 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: verdict360-postgres
+    environment:
+      POSTGRES_DB: verdict360_dev
+      POSTGRES_USER: verdict360_user
+      POSTGRES_PASSWORD: verdict360_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - verdict360-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdict360_user -d verdict360_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: verdict360-redis
+    command: redis-server --appendonly yes --requirepass verdict360_redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - verdict360-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama AI Service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: verdict360-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - verdict360-network
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Main Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verdict360-app
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: verdict360_dev
+      DB_USER: verdict360_user
+      DB_PASSWORD: verdict360_password
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: verdict360_redis_password
+      
+      # AI Service
+      OLLAMA_BASE_URL: http://ollama:11434
+      AI_MODEL: llama3.1:8b
+      
+      # Application
+      NODE_ENV: production
+      PORT: 3000
+      
+      # JWT (will be overridden by .env)
+      JWT_SECRET: production_jwt_secret_change_this
+      JWT_REFRESH_SECRET: production_refresh_secret_change_this
+      
+      # Email (will be overridden by .env)
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: thando.somacele@gmail.com
+      FROM_EMAIL: thando.somacele@gmail.com
+      FROM_NAME: Verdict 360
+      
+      # Security
+      CORS_ORIGIN: http://localhost:3001
+      
+      # Multi-tenant
+      DEFAULT_TENANT: demo
+      TENANT_DOMAIN_SUFFIX: .verdict360.local
+      
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./.env:/app/.env:ro
+    networks:
+      - verdict360-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Nginx Reverse Proxy (for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: verdict360-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - verdict360-network
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  verdict360-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,31 @@
+# Development Dockerfile with hot reload
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy package files
+COPY package*.json ./
+COPY src/client/package*.json ./src/client/
+
+# Install dependencies
+RUN npm install
+RUN cd src/client && npm install
+
+# Copy source code (will be overridden by volume mount in dev)
+COPY . .
+
+# Create logs directory
+RUN mkdir -p logs uploads
+
+# Expose ports
+EXPOSE 3000 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# Default command (can be overridden)
+CMD ["npm", "run", "dev"]
