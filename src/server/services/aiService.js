@@ -1,6 +1,8 @@
 const axios = require('axios');
 const { getDatabase } = require('../config/db');
 const logger = require('../utils/logger');
+const calendarService = require('./calendarService');
+const emailService = require('./emailService');
 
 class AIService {
   constructor() {
@@ -339,6 +341,182 @@ Remember: Your goal is to be helpful while guiding users toward booking consulta
           suggestedActions: ['continue_conversation']
         }
       };
+    }
+  }
+
+  /**
+   * Handle calendar appointment booking from chatbot conversation
+   */
+  async handleAppointmentBooking(tenantId, leadData, requestedSlot = null) {
+    try {
+      const { firstName, lastName, email, phone, legalIssue } = leadData;
+      
+      // Check if calendar is connected
+      const isCalendarConnected = await calendarService.isCalendarConnected(tenantId);
+      
+      if (!isCalendarConnected) {
+        logger.warn(`Calendar not connected for tenant ${tenantId}, creating lead without appointment`);
+        return {
+          success: false,
+          message: 'Calendar integration not available. We will contact you to schedule your consultation.',
+          requiresManualScheduling: true
+        };
+      }
+      
+      let appointmentTime = requestedSlot;
+      
+      // If no specific time requested, suggest next available slot
+      if (!appointmentTime) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const availableSlots = await calendarService.getAvailableSlots(tenantId, tomorrow, 60);
+        
+        if (availableSlots.length > 0) {
+          appointmentTime = availableSlots[0].start;
+        } else {
+          return {
+            success: false,
+            message: 'No available appointments tomorrow. We will contact you to find a suitable time.',
+            requiresManualScheduling: true
+          };
+        }
+      }
+      
+      // Create the appointment
+      const appointmentData = {
+        clientName: `${firstName} ${lastName}`,
+        clientEmail: email,
+        clientPhone: phone,
+        legalIssue: legalIssue,
+        startTime: appointmentTime,
+        duration: 60, // 1 hour consultation
+        notes: 'Booked via AI chatbot'
+      };
+      
+      const appointment = await calendarService.createConsultationAppointment(
+        tenantId, 
+        appointmentData
+      );
+      
+      // Send confirmation email
+      await emailService.sendConsultationConfirmation(
+        leadData,
+        await this.getTenantDetails(tenantId),
+        {
+          appointmentTime: appointmentTime,
+          meetingLink: appointment.meetingLink,
+          duration: 60
+        }
+      );
+      
+      logger.info(`Appointment automatically booked: ${appointment.appointmentId} for tenant ${tenantId}`);
+      
+      return {
+        success: true,
+        appointment: {
+          id: appointment.appointmentId,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          meetingLink: appointment.meetingLink,
+          calendarUrl: appointment.calendarUrl
+        },
+        message: `Great! I've scheduled your consultation for ${appointmentTime.toLocaleDateString('en-ZA')} at ${appointmentTime.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}. You'll receive a calendar invitation and confirmation email shortly.`
+      };
+      
+    } catch (error) {
+      logger.error('Error handling appointment booking:', error);
+      return {
+        success: false,
+        message: 'I encountered an issue scheduling your appointment, but we have your details and will contact you soon to arrange a consultation.',
+        requiresManualScheduling: true
+      };
+    }
+  }
+  
+  /**
+   * Get available appointment slots for chatbot responses
+   */
+  async getAvailableAppointmentSlots(tenantId, preferredDate = null) {
+    try {
+      const isCalendarConnected = await calendarService.isCalendarConnected(tenantId);
+      
+      if (!isCalendarConnected) {
+        return {
+          available: false,
+          message: 'Calendar scheduling is not available. We will contact you to arrange a consultation.'
+        };
+      }
+      
+      const targetDate = preferredDate || (() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow;
+      })();
+      
+      const slots = await calendarService.getAvailableSlots(tenantId, targetDate, 60);
+      
+      if (slots.length === 0) {
+        return {
+          available: false,
+          message: 'No appointments available for that date. We will contact you to find a suitable time.'
+        };
+      }
+      
+      // Format slots for chatbot response
+      const formattedSlots = slots.slice(0, 3).map((slot, index) => ({
+        id: index + 1,
+        time: slot.start.toLocaleTimeString('en-ZA', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          timeZone: 'Africa/Johannesburg'
+        }),
+        datetime: slot.start,
+        available: slot.available
+      }));
+      
+      return {
+        available: true,
+        date: targetDate.toLocaleDateString('en-ZA'),
+        slots: formattedSlots,
+        message: `Here are the available consultation times for ${targetDate.toLocaleDateString('en-ZA')}:`
+      };
+      
+    } catch (error) {
+      logger.error('Error getting available slots:', error);
+      return {
+        available: false,
+        message: 'Unable to check appointment availability. We will contact you to schedule a consultation.'
+      };
+    }
+  }
+  
+  /**
+   * Enhanced response processing with calendar integration
+   */
+  processResponseWithCalendar(response, context, leadData = null) {
+    const processedResponse = this.processResponse(response, context);
+    
+    // Check if we should offer specific appointment times
+    if (processedResponse.metadata.intent === 'booking_request' && leadData) {
+      processedResponse.metadata.suggestedActions.push('show_available_slots');
+      processedResponse.metadata.leadData = leadData;
+    }
+    
+    return processedResponse;
+  }
+  
+  /**
+   * Get tenant details for appointments
+   */
+  async getTenantDetails(tenantId) {
+    try {
+      const db = getDatabase();
+      const tenant = await db('tenants').where({ id: tenantId }).first();
+      return tenant;
+    } catch (error) {
+      logger.error('Error getting tenant details:', error);
+      return null;
     }
   }
 

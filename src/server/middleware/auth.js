@@ -13,7 +13,7 @@ const authenticateToken = async (req, res, next) => {
     const payload = verifyAccessToken(token);
     
     req.user = {
-      id: payload.userId,
+      userId: payload.userId,
       tenantId: payload.tenantId,
       email: payload.email,
       role: payload.role
@@ -69,7 +69,7 @@ const optionalAuth = async (req, res, next) => {
     if (token) {
       const payload = verifyAccessToken(token);
       req.user = {
-        id: payload.userId,
+        userId: payload.userId,
         tenantId: payload.tenantId,
         email: payload.email,
         role: payload.role

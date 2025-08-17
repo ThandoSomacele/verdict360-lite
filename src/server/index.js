@@ -61,6 +61,10 @@ async function startServer() {
     const chatRoutes = require('./routes/chat');
     const analyticsRoutes = require('./routes/analytics');
     const aiRoutes = require('./routes/ai');
+    const billingRoutes = require('./routes/billing');
+    const calendarRoutes = require('./routes/calendar');
+    const adminRoutes = require('./routes/admin');
+    const dashboardRoutes = require('./routes/dashboard');
     
     app.use('/api/auth', authRoutes);
     app.use('/api/tenants', tenantRoutes);
@@ -68,6 +72,10 @@ async function startServer() {
     app.use('/api/chat', chatRoutes);
     app.use('/api/analytics', analyticsRoutes);
     app.use('/api/ai', aiRoutes);
+    app.use('/api/billing', billingRoutes);
+    app.use('/api/calendar', calendarRoutes);
+    app.use('/api/admin', adminRoutes);
+    app.use('/api/dashboard', dashboardRoutes);
     
     app.use('/api/*', (req, res) => {
       res.status(404).json({ error: 'API endpoint not found' });
