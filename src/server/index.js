@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 
 const { connectDatabase } = require('./config/db');
 const { connectRedis } = require('./config/redis');
@@ -44,9 +45,7 @@ async function startServer() {
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true }));
     
-    app.use(resolveTenant);
-    app.use(globalRateLimit);
-    
+    // Health check before tenant resolution
     app.get('/health', (req, res) => {
       res.json({ 
         status: 'healthy', 
@@ -54,6 +53,15 @@ async function startServer() {
         environment: NODE_ENV
       });
     });
+    
+    // Serve demo page
+    app.use(express.static(path.join(__dirname, '../../public')));
+    app.get('/demo', (req, res) => {
+      res.sendFile(path.join(__dirname, '../../public/demo.html'));
+    });
+    
+    app.use(resolveTenant);
+    app.use(globalRateLimit);
     
     const authRoutes = require('./routes/auth');
     const tenantRoutes = require('./routes/tenants');

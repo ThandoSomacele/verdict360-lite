@@ -83,3 +83,4 @@ When working with this codebase:
 - Frontend components should support tenant-specific branding
 - Services (AI, email, calendar) must be tenant-aware
 - Analytics and metrics collection must segregate by tenant
+- dont add claude in commit messages

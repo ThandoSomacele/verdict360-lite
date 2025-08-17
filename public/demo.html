@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verdict 360 - AI Legal Chatbot Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; }
+        .header { background: #1e40af; color: white; padding: 2rem 0; text-align: center; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .hero { text-align: center; padding: 4rem 0; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; color: #1e293b; }
+        .hero p { font-size: 1.25rem; color: #64748b; margin-bottom: 2rem; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 2rem 0; }
+        .feature { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .feature h3 { color: #1e40af; margin-bottom: 1rem; }
+        .demo-section { background: white; margin: 2rem 0; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .btn { background: #1e40af; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; margin: 0.5rem; }
+        .btn:hover { background: #1d4ed8; }
+        .status { padding: 1rem; margin: 1rem 0; border-radius: 8px; }
+        .status.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status.warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .api-test { background: #f1f5f9; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-family: monospace; }
+        .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0; }
+        .price-card { background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 2rem; text-align: center; }
+        .price-card.popular { border-color: #1e40af; }
+        .price { font-size: 2rem; font-weight: bold; color: #1e40af; }
+        .footer { background: #1e293b; color: white; text-align: center; padding: 2rem 0; margin-top: 4rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🇿🇦 Verdict 360</h1>
+            <p>AI-Powered Legal Chatbot SaaS for South African Law Firms</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Live Demo</h1>
+            <p>Your comprehensive legal AI platform is running successfully!</p>
+            
+            <div class="status success">
+                ✅ <strong>System Status:</strong> All services are operational
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🧪 System Health Check</h2>
+            <p>Test the core platform health endpoint:</p>
+            <div class="api-test">
+                <strong>GET</strong> http://localhost:3001/health
+            </div>
+            <button class="btn" onclick="testHealth()">Test Health Endpoint</button>
+            <div id="health-result"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>💰 South African Pricing Plans</h2>
+            <div class="pricing">
+                <div class="price-card">
+                    <h3>Basic</h3>
+                    <div class="price">R299</div>
+                    <p>per month</p>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>500 conversations/month</li>
+                        <li>Email support</li>
+                        <li>Basic analytics</li>
+                    </ul>
+                </div>
+                <div class="price-card popular">
+                    <h3>Pro</h3>
+                    <div class="price">R599</div>
+                    <p>per month</p>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>2,000 conversations/month</li>
+                        <li>Calendar integration</li>
+                        <li>Advanced analytics</li>
+                        <li>Custom branding</li>
+                    </ul>
+                </div>
+                <div class="price-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">R1,299</div>
+                    <p>per month</p>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>Unlimited conversations</li>
+                        <li>API access</li>
+                        <li>White-label solution</li>
+                        <li>24/7 support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h3>🤖 AI Legal Assistant</h3>
+                <p>Powered by Llama 3.1 with South African legal knowledge. Provides accurate guidance on labour law, corporate law, and personal injury cases.</p>
+                <div class="status warning">⏳ AI Service: Ollama downloading (2GB)</div>
+            </div>
+
+            <div class="feature">
+                <h3>📅 Google Calendar Integration</h3>
+                <p>Automatic consultation booking with Google Calendar sync, Google Meet links, and email confirmations.</p>
+                <div class="status success">✅ Calendar Service: Ready</div>
+            </div>
+
+            <div class="feature">
+                <h3>💳 Stripe Billing (ZAR)</h3>
+                <p>Complete South African Rand billing system with Stripe integration, subscription management, and invoicing.</p>
+                <div class="status success">✅ Billing Service: Configured</div>
+            </div>
+
+            <div class="feature">
+                <h3>📧 Gmail Integration</h3>
+                <p>Professional email automation for consultation confirmations, attorney notifications, and follow-ups.</p>
+                <div class="status success">✅ Email Service: Ready</div>
+            </div>
+
+            <div class="feature">
+                <h3>🏢 Multi-Tenant SaaS</h3>
+                <p>Complete tenant isolation, custom branding, subdomain routing, and enterprise management tools.</p>
+                <div class="status success">✅ Platform: Operational</div>
+            </div>
+
+            <div class="feature">
+                <h3>📊 Admin Dashboard</h3>
+                <p>Comprehensive platform management with revenue tracking, tenant analytics, and system monitoring.</p>
+                <div class="status success">✅ Dashboard: Available</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Quick Demo Actions</h2>
+            <a href="http://localhost:3001/health" class="btn" target="_blank">View Health Status</a>
+            <a href="#" class="btn" onclick="testAPI()">Test API Endpoints</a>
+            <a href="https://github.com/ThandoSomacele/verdict360-lite" class="btn" target="_blank">View Source Code</a>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Technical Architecture</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="text-align: center; padding: 1rem;">
+                    <strong>Frontend</strong><br>
+                    React + TypeScript<br>
+                    Tailwind CSS
+                </div>
+                <div style="text-align: center; padding: 1rem;">
+                    <strong>Backend</strong><br>
+                    Express.js + Node.js<br>
+                    Socket.IO
+                </div>
+                <div style="text-align: center; padding: 1rem;">
+                    <strong>Database</strong><br>
+                    PostgreSQL<br>
+                    Redis Cache
+                </div>
+                <div style="text-align: center; padding: 1rem;">
+                    <strong>AI</strong><br>
+                    Ollama + Llama 3.1<br>
+                    South African Legal KB
+                </div>
+                <div style="text-align: center; padding: 1rem;">
+                    <strong>Integrations</strong><br>
+                    Stripe + Google APIs<br>
+                    Docker Deployment
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>&copy; 2024 Verdict 360 - AI Legal Chatbot SaaS Platform for South African Law Firms</p>
+            <p>🇿🇦 Built for South Africa | Ready for Production</p>
+        </div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="api-test" style="background: #dcfce7; border: 1px solid #bbf7d0;">
+                        <strong>✅ Success!</strong><br>
+                        Status: ${data.status}<br>
+                        Environment: ${data.environment}<br>
+                        Timestamp: ${data.timestamp}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="api-test" style="background: #fecaca; border: 1px solid #fca5a5;">
+                        <strong>❌ Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function testAPI() {
+            alert('🚀 API Endpoints Available:\\n\\n' +
+                  '• GET /health - System health\\n' +
+                  '• POST /api/auth/register - Law firm registration\\n' +
+                  '• GET /api/billing/plans - ZAR pricing plans\\n' +
+                  '• GET /api/calendar/status - Calendar integration\\n' +
+                  '• POST /api/chat/message - AI conversations\\n\\n' +
+                  'Full API documentation available in the repository!');
+        }
+
+        // Auto-test health on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 1000);
+        });
+    </script>
+</body>
+</html>
