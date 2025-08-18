@@ -5,12 +5,13 @@ let redisClient = null;
 
 const connectRedis = async () => {
   try {
+    const redisUrl = `redis://${process.env.REDIS_PASSWORD ? `:${process.env.REDIS_PASSWORD}@` : ''}${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`;
+    
     redisClient = redis.createClient({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT || 6379,
-      password: process.env.REDIS_PASSWORD || undefined,
-      retryDelayOnFailover: 100,
-      maxRetriesPerRequest: 3,
+      url: redisUrl,
+      socket: {
+        reconnectStrategy: (retries) => Math.min(retries * 50, 500)
+      }
     });
 
     redisClient.on('connect', () => {

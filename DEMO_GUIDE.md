@@ -115,7 +115,7 @@ npm run dev
 ### Test 1: Platform Admin Access
 ```bash
 # Access admin dashboard
-http://localhost:3000/admin
+http://localhost:3001/admin
 
 # Default admin credentials (create manually):
 # Email: admin@verdict360.com

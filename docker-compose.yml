@@ -97,14 +97,14 @@ services:
       FROM_NAME: Verdict 360
       
       # Security
-      CORS_ORIGIN: http://localhost:3001
+      CORS_ORIGIN: http://localhost:4001
       
       # Multi-tenant
       DEFAULT_TENANT: demo
       TENANT_DOMAIN_SUFFIX: .verdict360.local
       
     ports:
-      - "3000:3000"
+      - "4000:3000"
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
@@ -130,8 +130,8 @@ services:
     image: nginx:alpine
     container_name: verdict360-nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "8081:80"
+      - "8443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
