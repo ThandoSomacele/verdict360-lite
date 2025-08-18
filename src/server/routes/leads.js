@@ -99,7 +99,7 @@ router.post('/',
 
     // Send attorney notification for demo law firm
     try {
-      const attorneyEmail = 'thando.somacele@gmail.com';
+      const attorneyEmail = 'tsomacele@gmail.com';
       await emailService.sendAttorneyNotification(
         { firstName, lastName, email, phone, legalIssue: finalLegalIssue },
         req.tenant,

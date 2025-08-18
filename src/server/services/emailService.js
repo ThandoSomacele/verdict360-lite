@@ -12,6 +12,12 @@ class EmailService {
 
   async setupEmailTransporter() {
     try {
+      console.log('📧 Email service setup...');
+      console.log('  - OAuth2 Client ID:', !!process.env.GOOGLE_CLIENT_ID);
+      console.log('  - OAuth2 Client Secret:', !!process.env.GOOGLE_CLIENT_SECRET);
+      console.log('  - OAuth2 Refresh Token:', !!process.env.GOOGLE_REFRESH_TOKEN);
+      console.log('  - SMTP Password:', !!process.env.SMTP_PASS);
+
       if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         // OAuth2 setup for Gmail API
         this.oauth2Client = new google.auth.OAuth2(
@@ -21,14 +27,19 @@ class EmailService {
         );
 
         // Set refresh token if available
-        if (process.env.GOOGLE_REFRESH_TOKEN) {
+        if (process.env.GOOGLE_REFRESH_TOKEN && process.env.GOOGLE_REFRESH_TOKEN !== 'paste_your_refresh_token_here') {
           this.oauth2Client.setCredentials({
             refresh_token: process.env.GOOGLE_REFRESH_TOKEN
           });
+          console.log('✅ OAuth2 credentials configured');
+        } else {
+          console.log('⚠️  GOOGLE_REFRESH_TOKEN not configured');
+          console.log('   Follow the OAuth2 setup guide to get your refresh token');
+          throw new Error('Missing OAuth2 refresh token');
         }
 
         // Create transporter with OAuth2
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             type: 'OAuth2',
@@ -41,12 +52,16 @@ class EmailService {
         });
       } else {
         // Fallback to app password method
-        this.transporter = nodemailer.createTransporter({
+        const smtpUser = process.env.SMTP_USER || 'thando.somacele@gmail.com';
+        console.log('📧 Configuring SMTP with user:', smtpUser);
+        console.log('📧 App password length:', process.env.SMTP_PASS?.length);
+        
+        this.transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: process.env.SMTP_PORT || 587,
           secure: false,
           auth: {
-            user: process.env.SMTP_USER || 'thando.somacele@gmail.com',
+            user: smtpUser,
             pass: process.env.SMTP_PASS // App password
           }
         });

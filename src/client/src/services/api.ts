@@ -107,9 +107,10 @@ class ApiService {
 
   // Lead methods
   async createLead(contactData: any, conversationId?: string) {
+    const nameParts = contactData.name.split(' ');
     const leadData = {
-      firstName: contactData.name.split(' ')[0],
-      lastName: contactData.name.split(' ').slice(1).join(' ') || '',
+      firstName: nameParts[0],
+      lastName: nameParts.slice(1).join(' ') || nameParts[0], // Use first name as last name if no last name provided
       email: contactData.email,
       phone: contactData.phone,
       conversationId
