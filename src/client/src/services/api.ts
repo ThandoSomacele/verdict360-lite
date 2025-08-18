@@ -106,7 +106,14 @@ class ApiService {
   }
 
   // Lead methods
-  async createLead(leadData: any) {
+  async createLead(contactData: any, conversationId?: string) {
+    const leadData = {
+      firstName: contactData.name.split(' ')[0],
+      lastName: contactData.name.split(' ').slice(1).join(' ') || '',
+      email: contactData.email,
+      phone: contactData.phone,
+      conversationId
+    };
     const response = await this.api.post('/leads', leadData);
     return response.data;
   }

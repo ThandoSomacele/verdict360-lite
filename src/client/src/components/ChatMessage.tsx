@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Message, Tenant } from '../types';
+
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 interface ChatMessageProps {
   message: Message;
@@ -7,9 +13,16 @@ interface ChatMessageProps {
   theme?: 'light' | 'dark';
   onConsultationRequest?: () => void;
   onContinueChat?: () => void;
+  onContactSubmit?: (contactData: ContactFormData) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'light', onConsultationRequest, onContinueChat }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'light', onConsultationRequest, onContinueChat, onContactSubmit }) => {
+  const [contactData, setContactData] = useState<ContactFormData>({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
   const isBot = message.senderType === 'bot';
   const isVisitor = message.senderType === 'visitor';
   const isAttorney = message.senderType === 'attorney';
@@ -17,6 +30,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onContactSubmit && contactData.name && contactData.email) {
+      onContactSubmit(contactData);
+      // Reset form after submission
+      setContactData({ name: '', email: '', phone: '' });
+    }
+  };
+
+  const updateContactData = (field: keyof ContactFormData, value: string) => {
+    setContactData(prev => ({ ...prev, [field]: value }));
   };
 
   const getBotAvatar = () => (
@@ -131,35 +157,45 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
 
           {/* Show contact form if data collection */}
           {message.metadata?.isDataCollection && (
-            <div className="mt-3 p-3 bg-white rounded-md border">
+            <form onSubmit={handleContactSubmit} className="mt-3 p-3 bg-white rounded-md border">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
               <div className="space-y-2">
                 <input
                   type="text"
                   placeholder="Full Name"
+                  value={contactData.name}
+                  onChange={(e) => updateContactData('name', e.target.value)}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
                   type="email"
                   placeholder="Email Address"
+                  value={contactData.email}
+                  onChange={(e) => updateContactData('email', e.target.value)}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
                   type="tel"
                   placeholder="Phone Number"
+                  value={contactData.phone}
+                  onChange={(e) => updateContactData('phone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <button className={`
-                  w-full px-3 py-2 text-sm text-white rounded-md transition-colors
-                  ${tenant?.branding?.primaryColor 
-                    ? `bg-[${tenant.branding.primaryColor}] hover:opacity-90` 
-                    : 'bg-blue-600 hover:bg-blue-700'
-                  }
-                `}>
+                <button 
+                  type="submit"
+                  className={`
+                    w-full px-3 py-2 text-sm text-white rounded-md transition-colors
+                    ${tenant?.branding?.primaryColor 
+                      ? `bg-[${tenant.branding.primaryColor}] hover:opacity-90` 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                    }
+                  `}>
                   Submit Information
                 </button>
               </div>
-            </div>
+            </form>
           )}
         </div>
         <div className="flex items-center mt-1">

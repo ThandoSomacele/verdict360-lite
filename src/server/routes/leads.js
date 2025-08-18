@@ -4,6 +4,7 @@ const { authenticateToken, requireRole, optionalAuth } = require('../middleware/
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getDatabase } = require('../config/db');
 const logger = require('../utils/logger');
+const emailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -15,7 +16,8 @@ router.post('/',
     body('email').isEmail().normalizeEmail(),
     body('phone').optional().trim(),
     body('legalIssue').optional().trim(),
-    body('consultationDetails').optional().isObject()
+    body('consultationDetails').optional().isObject(),
+    body('conversationId').optional().isUUID()
   ],
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -23,7 +25,7 @@ router.post('/',
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, phone, legalIssue, consultationDetails, metadata } = req.body;
+    const { firstName, lastName, email, phone, legalIssue, consultationDetails, metadata, conversationId } = req.body;
     const db = getDatabase();
 
     // Check for existing lead with same email
@@ -39,6 +41,22 @@ router.post('/',
       });
     }
 
+    // Get legal issue from conversation if not provided
+    let finalLegalIssue = legalIssue;
+    if (!finalLegalIssue && conversationId) {
+      // Extract legal issue from conversation messages
+      const messages = await db('messages')
+        .where({ conversation_id: conversationId, sender_type: 'visitor' })
+        .orderBy('sent_at', 'asc');
+      
+      if (messages.length > 0) {
+        finalLegalIssue = messages
+          .map(msg => msg.content)
+          .join(' ')
+          .substring(0, 500); // Limit length
+      }
+    }
+
     const [lead] = await db('leads')
       .insert({
         tenant_id: req.tenant.id,
@@ -46,13 +64,38 @@ router.post('/',
         last_name: lastName,
         email,
         phone,
-        legal_issue: legalIssue,
+        legal_issue: finalLegalIssue,
         consultation_details: consultationDetails ? JSON.stringify(consultationDetails) : null,
-        metadata: metadata ? JSON.stringify(metadata) : JSON.stringify({})
+        metadata: metadata ? JSON.stringify({
+          ...metadata,
+          conversationId: conversationId
+        }) : JSON.stringify({ conversationId })
       })
       .returning('*');
 
+    // Link conversation to lead if conversationId provided
+    if (conversationId) {
+      await db('conversations')
+        .where({ id: conversationId })
+        .update({ 
+          lead_id: lead.id, 
+          updated_at: db.fn.now() 
+        });
+    }
+
     logger.info(`New lead created: ${email} for tenant ${req.tenant.subdomain}`);
+
+    // Send confirmation email to client
+    try {
+      await emailService.sendConsultationConfirmationEmail(
+        { firstName, lastName, email, phone },
+        req.tenant,
+        { type: 'initial_consultation', status: 'pending' }
+      );
+    } catch (error) {
+      logger.error('Failed to send confirmation email:', error);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       id: lead.id,

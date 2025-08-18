@@ -209,6 +209,22 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     sendMessage("I'd like to continue chatting with the AI assistant.");
   };
 
+  const handleContactSubmit = async (contactData: any) => {
+    try {
+      // Send structured contact data to API to create lead
+      await apiService.createLead(contactData, conversation?.id);
+      
+      // Send confirmation message to chat
+      const message = `Thank you, ${contactData.name}! I've successfully received your contact information and created your consultation request. One of our attorneys will contact you within 24 hours. You should also receive a confirmation email shortly.`;
+      sendMessage(message);
+    } catch (error) {
+      console.error('Failed to create lead:', error);
+      // Fallback message
+      const message = `Thank you for providing your contact information. I'll make sure our team receives your details and contacts you soon.`;
+      sendMessage(message);
+    }
+  };
+
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
@@ -305,6 +321,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                 theme={theme}
                 onConsultationRequest={handleConsultationRequest}
                 onContinueChat={handleContinueChat}
+                onContactSubmit={handleContactSubmit}
               />
             ))}
 
