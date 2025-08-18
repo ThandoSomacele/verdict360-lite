@@ -24,6 +24,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isConversationCompleted, setIsConversationCompleted] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentVisitorId = useRef<string>(visitorId || `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -214,14 +215,62 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       // Send structured contact data to API to create lead
       await apiService.createLead(contactData, conversation?.id);
       
-      // Send confirmation message to chat
-      const message = `Thank you, ${contactData.name}! I've successfully received your contact information and created your consultation request. One of our attorneys will contact you within 24 hours. You should also receive a confirmation email shortly.`;
-      sendMessage(message);
+      // Send final confirmation message (no AI processing)
+      const confirmationMessage: Message = {
+        id: `confirmation_${Date.now()}`,
+        conversationId: conversation!.id,
+        senderType: 'bot',
+        senderId: null,
+        senderName: 'Legal Assistant',
+        content: "Thank you for providing your contact information. I'll make sure our team receives your details and contacts you soon.",
+        metadata: { 
+          intent: 'consultation_confirmed',
+          isDataCollection: false,
+          shouldOfferConsultation: false,
+          isFinalMessage: true
+        },
+        sentAt: new Date().toISOString(),
+      };
+
+      // Add message directly to chat without triggering AI
+      setMessages(prev => [...prev, confirmationMessage]);
+
+      // Mark conversation as completed
+      setIsConversationCompleted(true);
+
+      // End the conversation
+      if (conversation) {
+        await apiService.endConversation(conversation.id);
+        socketService.endConversation(conversation.id);
+      }
     } catch (error) {
       console.error('Failed to create lead:', error);
-      // Fallback message
-      const message = `Thank you for providing your contact information. I'll make sure our team receives your details and contacts you soon.`;
-      sendMessage(message);
+      // Fallback message - still end the conversation
+      const fallbackMessage: Message = {
+        id: `fallback_${Date.now()}`,
+        conversationId: conversation!.id,
+        senderType: 'bot',
+        senderId: null,
+        senderName: 'Legal Assistant',
+        content: "Thank you for providing your contact information. I'll make sure our team receives your details and contacts you soon.",
+        metadata: { 
+          intent: 'consultation_confirmed',
+          isDataCollection: false,
+          shouldOfferConsultation: false,
+          isFinalMessage: true
+        },
+        sentAt: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, fallbackMessage]);
+
+      // Mark conversation as completed
+      setIsConversationCompleted(true);
+
+      if (conversation) {
+        await apiService.endConversation(conversation.id);
+        socketService.endConversation(conversation.id);
+      }
     }
   };
 
@@ -339,9 +388,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           <MessageInput
             onSendMessage={sendMessage}
             onTyping={handleTyping}
-            disabled={isLoading || !isConnected}
+            disabled={isLoading || !isConnected || isConversationCompleted}
             theme={theme}
-            placeholder="Type your legal question..."
+            placeholder={isConversationCompleted ? "Conversation completed" : "Type your legal question..."}
           />
         </div>
       )}
