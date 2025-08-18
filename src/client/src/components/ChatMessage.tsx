@@ -5,9 +5,11 @@ interface ChatMessageProps {
   message: Message;
   tenant: Tenant | null;
   theme?: 'light' | 'dark';
+  onConsultationRequest?: () => void;
+  onContinueChat?: () => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'light' }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'light', onConsultationRequest, onContinueChat }) => {
   const isBot = message.senderType === 'bot';
   const isVisitor = message.senderType === 'visitor';
   const isAttorney = message.senderType === 'attorney';
@@ -102,22 +104,26 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
           {/* Show consultation offer buttons if applicable */}
           {message.metadata?.shouldOfferConsultation && (
             <div className="mt-3 space-y-2">
-              <button className={`
-                w-full px-3 py-2 text-sm rounded-md border transition-colors
-                ${tenant?.branding?.primaryColor 
-                  ? `border-[${tenant.branding.primaryColor}] text-[${tenant.branding.primaryColor}] hover:bg-[${tenant.branding.primaryColor}] hover:text-white` 
-                  : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
-                }
-              `}>
+              <button 
+                onClick={onConsultationRequest}
+                className={`
+                  w-full px-3 py-2 text-sm rounded-md border transition-colors
+                  ${tenant?.branding?.primaryColor 
+                    ? `border-[${tenant.branding.primaryColor}] text-[${tenant.branding.primaryColor}] hover:bg-[${tenant.branding.primaryColor}] hover:text-white` 
+                    : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
+                  }
+                `}>
                 Yes, connect me with an attorney
               </button>
-              <button className={`
-                w-full px-3 py-2 text-sm rounded-md border transition-colors
-                ${theme === 'dark' 
-                  ? 'border-gray-600 text-gray-300 hover:bg-gray-600' 
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }
-              `}>
+              <button 
+                onClick={onContinueChat}
+                className={`
+                  w-full px-3 py-2 text-sm rounded-md border transition-colors
+                  ${theme === 'dark' 
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-600' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }
+                `}>
                 No, continue chatting
               </button>
             </div>

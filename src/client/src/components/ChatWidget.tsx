@@ -167,21 +167,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     try {
       setIsLoading(true);
 
-      // Add user message to UI immediately
-      const userMessage: Message = {
-        id: `user_${Date.now()}`,
-        conversationId: conversation.id,
-        senderType: 'visitor',
-        senderId: currentVisitorId.current,
-        senderName: null,
-        content: content.trim(),
-        metadata: {},
-        sentAt: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, userMessage]);
-
-      // Send message via socket for real-time updates
+      // Send message via socket for real-time updates (will come back via onMessage)
       socketService.sendVisitorMessage(content.trim());
 
       // Send to AI service for processing
@@ -209,6 +195,18 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     } else {
       socketService.stopTyping(conversation.id);
     }
+  };
+
+  const handleConsultationRequest = () => {
+    // TODO: Implement consultation request functionality
+    // For now, just send a message indicating the user wants an attorney
+    sendMessage("I would like to speak with an attorney please.");
+  };
+
+  const handleContinueChat = () => {
+    // TODO: Implement continue chat functionality  
+    // For now, just send a message to continue
+    sendMessage("I'd like to continue chatting with the AI assistant.");
   };
 
   const toggleChat = () => {
@@ -305,6 +303,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                 message={message}
                 tenant={tenant}
                 theme={theme}
+                onConsultationRequest={handleConsultationRequest}
+                onContinueChat={handleContinueChat}
               />
             ))}
 
