@@ -127,9 +127,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
         `}>
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
           
-          {/* Show consultation offer buttons if applicable */}
+          {/* Show consultation offer button if applicable */}
           {message.metadata?.shouldOfferConsultation && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3">
               <button 
                 onClick={onConsultationRequest}
                 className={`
@@ -140,17 +140,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
                   }
                 `}>
                 Yes, connect me with an attorney
-              </button>
-              <button 
-                onClick={onContinueChat}
-                className={`
-                  w-full px-3 py-2 text-sm rounded-md border transition-colors
-                  ${theme === 'dark' 
-                    ? 'border-gray-600 text-gray-300 hover:bg-gray-600' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }
-                `}>
-                No, continue chatting
               </button>
             </div>
           )}
