@@ -18,7 +18,7 @@ class SocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
 
-  connect(serverUrl: string = 'http://localhost:3000'): Promise<void> {
+  connect(serverUrl: string = 'http://localhost:4000'): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         this.socket = io(serverUrl, {

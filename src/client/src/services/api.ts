@@ -5,7 +5,7 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
     
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -28,6 +28,9 @@ class ApiService {
         
         if (subdomain && subdomain !== 'localhost' && subdomain !== 'www') {
           config.headers['x-tenant-id'] = subdomain;
+        } else {
+          // For localhost development, use demo tenant
+          config.headers['x-tenant-id'] = 'demo';
         }
 
         return config;
