@@ -78,7 +78,7 @@ router.post('/welcome',
       logger.error('Error generating welcome message:', error);
       
       res.json({
-        response: "Hello! Welcome to our law firm. I'm here to help answer your legal questions and connect you with our attorneys. How can I assist you today?",
+        response: "Good day! Welcome to our law firm. I'm here to assist you with your legal enquiries and connect you with our qualified attorneys. How may I help you today?",
         metadata: {
           intent: 'greeting',
           shouldOfferConsultation: false,

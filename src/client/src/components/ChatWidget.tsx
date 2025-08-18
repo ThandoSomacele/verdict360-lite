@@ -201,7 +201,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const handleConsultationRequest = () => {
     // TODO: Implement consultation request functionality
     // For now, just send a message indicating the user wants an attorney
-    sendMessage("I would like to speak with an attorney please.");
+    sendMessage("I would like to speak with one of your attorneys please.");
   };
 
   const handleContinueChat = () => {
@@ -212,8 +212,18 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   const handleContactSubmit = async (contactData: any) => {
     try {
+      // Show typing indicator while processing
+      setIsTyping(true);
+      setTypingUser('Legal Assistant');
+      
       // Send structured contact data to API to create lead
       await apiService.createLead(contactData, conversation?.id);
+      
+      // Add a small delay to ensure typing indicator is visible
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Hide typing indicator
+      setIsTyping(false);
       
       // Send final confirmation message (no AI processing)
       const confirmationMessage: Message = {
@@ -222,7 +232,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         senderType: 'bot',
         senderId: null,
         senderName: 'Legal Assistant',
-        content: "Thank you for providing your contact information. I'll make sure our team receives your details and contacts you soon.",
+        content: "Thank you for providing your contact information. I'll ensure our team receives your details and contacts you shortly.",
         metadata: { 
           intent: 'consultation_confirmed',
           isDataCollection: false,
@@ -245,6 +255,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       }
     } catch (error) {
       console.error('Failed to create lead:', error);
+      // Hide typing indicator on error
+      setIsTyping(false);
       // Fallback message - still end the conversation
       const fallbackMessage: Message = {
         id: `fallback_${Date.now()}`,
@@ -252,7 +264,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         senderType: 'bot',
         senderId: null,
         senderName: 'Legal Assistant',
-        content: "Thank you for providing your contact information. I'll make sure our team receives your details and contacts you soon.",
+        content: "Thank you for providing your contact information. I'll ensure our team receives your details and contacts you shortly.",
         metadata: { 
           intent: 'consultation_confirmed',
           isDataCollection: false,
@@ -390,7 +402,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             onTyping={handleTyping}
             disabled={isLoading || !isConnected || isConversationCompleted}
             theme={theme}
-            placeholder={isConversationCompleted ? "Conversation completed" : "Type your legal question..."}
+            placeholder={isConversationCompleted ? "Conversation completed" : "Type your legal enquiry..."}
           />
         </div>
       )}

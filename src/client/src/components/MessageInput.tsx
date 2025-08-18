@@ -164,7 +164,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       {/* Quick Actions */}
       <div className="mt-2 flex flex-wrap gap-2">
         <button
-          onClick={() => setMessage("I need help with a legal matter")}
+          onClick={() => setMessage("I require assistance with a legal matter")}
           disabled={disabled}
           className={`
             px-3 py-1 text-xs rounded-full border transition-colors
@@ -178,7 +178,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           Legal Help
         </button>
         <button
-          onClick={() => setMessage("I want to book a consultation")}
+          onClick={() => setMessage("I would like to book a consultation")}
           disabled={disabled}
           className={`
             px-3 py-1 text-xs rounded-full border transition-colors

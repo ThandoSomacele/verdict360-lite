@@ -10,7 +10,7 @@ class ConversationFlowService {
       OFFERING_CONSULTATION: 'offering_consultation',
       COLLECTING_CONTACT: 'collecting_contact',
       SCHEDULING: 'scheduling',
-      COMPLETED: 'completed'
+      COMPLETED: 'completed',
     };
   }
 
@@ -22,29 +22,29 @@ class ConversationFlowService {
       // Get conversation state and history
       const conversation = await this.getConversationWithHistory(conversationId);
       const currentState = this.determineConversationState(conversation);
-      
+
       logger.info(`Processing message in state: ${currentState} for conversation ${conversationId}`);
-      
+
       // Handle different conversation states
       switch (currentState) {
         case this.flowStates.INITIAL:
           return await this.handleInitialState(conversation, userMessage, tenantId);
-          
+
         case this.flowStates.GATHERING_INFO:
           return await this.handleGatheringInfoState(conversation, userMessage, tenantId);
-          
+
         case this.flowStates.OFFERING_CONSULTATION:
           return await this.handleOfferingConsultationState(conversation, userMessage, tenantId);
-          
+
         case this.flowStates.COLLECTING_CONTACT:
           return await this.handleCollectingContactState(conversation, userMessage, tenantId);
-          
+
         case this.flowStates.SCHEDULING:
           return await this.handleSchedulingState(conversation, userMessage, tenantId);
-          
+
         case this.flowStates.COMPLETED:
           return await this.handleCompletedState(conversation, userMessage, tenantId);
-          
+
         default:
           return await this.handleGatheringInfoState(conversation, userMessage, tenantId);
       }
@@ -59,23 +59,21 @@ class ConversationFlowService {
    */
   async getConversationWithHistory(conversationId) {
     const db = getDatabase();
-    
-    const conversation = await db('conversations')
-      .where({ id: conversationId })
-      .first();
-      
+
+    const conversation = await db('conversations').where({ id: conversationId }).first();
+
     if (!conversation) {
       throw new Error('Conversation not found');
     }
-    
+
     const messages = await db('messages')
       .where({ conversation_id: conversationId })
       .orderBy('sent_at', 'asc')
       .select(['sender_type', 'content', 'metadata', 'sent_at']);
-    
+
     return {
       ...conversation,
-      messages
+      messages,
     };
   }
 
@@ -84,51 +82,54 @@ class ConversationFlowService {
    */
   determineConversationState(conversation) {
     const { messages } = conversation;
-    
+
     if (messages.length === 0) {
       return this.flowStates.INITIAL;
     }
-    
+
     // Check if consultation has been confirmed (lead created)
-    const hasLeadConfirmation = messages.some(msg => 
-      msg.sender_type === 'bot' && 
-      (msg.content.includes('consultation request has already been submitted') ||
-       msg.content.includes('have all your information and have created') ||
-       msg.content.includes('consultation request. One of our'))
+    const hasLeadConfirmation = messages.some(
+      msg =>
+        msg.sender_type === 'bot' &&
+        (msg.content.includes('consultation request has already been submitted') ||
+          msg.content.includes('have all your information and have created') ||
+          msg.content.includes('consultation request. One of our'))
     );
-    
+
     if (hasLeadConfirmation) {
       return this.flowStates.COMPLETED;
     }
-    
+
     // Look for consultation-related keywords in recent messages
     const recentMessages = messages.slice(-5);
-    
+
     // Check if we're collecting contact information
-    const hasContactRequest = recentMessages.some(msg => 
-      msg.sender_type === 'bot' && 
-      (msg.content.toLowerCase().includes('contact') || 
-       msg.content.toLowerCase().includes('name') ||
-       msg.content.toLowerCase().includes('email') ||
-       msg.content.toLowerCase().includes('phone'))
+    const hasContactRequest = recentMessages.some(
+      msg =>
+        msg.sender_type === 'bot' &&
+        (msg.content.toLowerCase().includes('contact') ||
+          msg.content.toLowerCase().includes('name') ||
+          msg.content.toLowerCase().includes('email') ||
+          msg.content.toLowerCase().includes('phone'))
     );
-    
+
     if (hasContactRequest) {
       return this.flowStates.COLLECTING_CONTACT;
     }
-    
+
     // Check if consultation was offered
-    const hasConsultationOffer = recentMessages.some(msg => 
-      msg.sender_type === 'bot' && 
-      (msg.content.toLowerCase().includes('consultation') || 
-       msg.content.toLowerCase().includes('attorney') ||
-       msg.content.toLowerCase().includes('meeting'))
+    const hasConsultationOffer = recentMessages.some(
+      msg =>
+        msg.sender_type === 'bot' &&
+        (msg.content.toLowerCase().includes('consultation') ||
+          msg.content.toLowerCase().includes('attorney') ||
+          msg.content.toLowerCase().includes('meeting'))
     );
-    
+
     if (hasConsultationOffer) {
       return this.flowStates.OFFERING_CONSULTATION;
     }
-    
+
     return this.flowStates.GATHERING_INFO;
   }
 
@@ -139,9 +140,9 @@ class ConversationFlowService {
     const context = {
       tenantId,
       conversationHistory: [],
-      userMessage
+      userMessage,
     };
-    
+
     return await aiService.generateResponse(userMessage, context);
   }
 
@@ -152,21 +153,20 @@ class ConversationFlowService {
     const context = {
       tenantId,
       conversationHistory: conversation.messages,
-      userMessage
+      userMessage,
     };
-    
+
     const response = await aiService.generateResponse(userMessage, context);
-    
+
     // Check if AI suggests offering consultation
-    if (response.metadata.shouldOfferConsultation || 
-        this.shouldOfferConsultation(userMessage, conversation.messages)) {
-      
+    if (response.metadata.shouldOfferConsultation || this.shouldOfferConsultation(userMessage, conversation.messages)) {
       // Modify response to include consultation offer
-      response.content += "\n\nWould you like me to connect you with one of our attorneys who can better assist you with this matter?";
+      response.content +=
+        '\n\nWould you like me to connect you with one of our attorneys who can better assist you with this matter?';
       response.metadata.intent = 'consultation_offer';
       response.metadata.suggestedActions = ['offer_consultation'];
     }
-    
+
     return response;
   }
 
@@ -175,44 +175,47 @@ class ConversationFlowService {
    */
   async handleOfferingConsultationState(conversation, userMessage, tenantId) {
     const userResponse = userMessage.toLowerCase().trim();
-    
+
     // Check for positive responses
     const positiveResponses = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'that would be great'];
     const negativeResponses = ['no', 'nah', 'not now', 'maybe later', 'not interested'];
-    
+
     const isPositive = positiveResponses.some(phrase => userResponse.includes(phrase));
     const isNegative = negativeResponses.some(phrase => userResponse.includes(phrase));
-    
+
     if (isPositive) {
       return {
-        content: "Excellent! I'd be happy to set up a consultation for you. To connect you with the right attorney, I'll need to collect some basic contact information. Could you please provide your full name, email address, and phone number?",
+        content:
+          "Excellent! I'd be happy to set up a consultation for you. To connect you with the right attorney, I'll need to collect some basic contact information. Could you please provide your full name, email address, and phone number?",
         metadata: {
           intent: 'data_collection',
           shouldOfferConsultation: false,
           isDataCollection: true,
-          suggestedActions: ['collect_contact_info']
-        }
+          suggestedActions: ['collect_contact_info'],
+        },
       };
     } else if (isNegative) {
       return {
-        content: "No problem at all! I'm here if you have any other legal questions or if you change your mind about speaking with an attorney. Is there anything else I can help you with today?",
+        content:
+          "That's perfectly fine! I'm here should you have any other legal enquiries or if you change your mind about speaking with one of our attorneys. Is there anything else I can assist you with today?",
         metadata: {
           intent: 'continue_conversation',
           shouldOfferConsultation: false,
           isDataCollection: false,
-          suggestedActions: ['continue_conversation']
-        }
+          suggestedActions: ['continue_conversation'],
+        },
       };
     } else {
       // Unclear response, ask for clarification
       return {
-        content: "I want to make sure I understand correctly. Would you like me to arrange a consultation with one of our attorneys? Just let me know 'yes' or 'no' and I'll help you accordingly.",
+        content:
+          "I want to make sure I understand correctly. Would you like me to arrange a consultation with one of our attorneys? Just let me know 'yes' or 'no' and I'll help you accordingly.",
         metadata: {
           intent: 'clarification',
           shouldOfferConsultation: true,
           isDataCollection: false,
-          suggestedActions: ['clarify_consultation']
-        }
+          suggestedActions: ['clarify_consultation'],
+        },
       };
     }
   }
@@ -225,8 +228,8 @@ class ConversationFlowService {
     const db = getDatabase();
     const existingLead = await db('leads')
       .where('metadata', 'like', `%"conversationId":"${conversation.id}"%`)
-      .orWhere(function() {
-        this.whereExists(function() {
+      .orWhere(function () {
+        this.whereExists(function () {
           this.select('*')
             .from('conversations')
             .whereRaw('conversations.id = ? AND conversations.lead_id = leads.id', [conversation.id]);
@@ -244,24 +247,22 @@ class ConversationFlowService {
           leadId: existingLead.id,
           shouldOfferConsultation: false,
           isDataCollection: false,
-          suggestedActions: ['conversation_complete']
-        }
+          suggestedActions: ['conversation_complete'],
+        },
       };
     }
 
     const contactInfo = this.extractContactInfo(userMessage);
-    
+
     if (contactInfo.isComplete) {
       // Create lead with collected information
       try {
         const leadId = await this.createLead(conversation.id, contactInfo, tenantId);
-        
+
         // Link lead to conversation
         const db = getDatabase();
-        await db('conversations')
-          .where({ id: conversation.id })
-          .update({ lead_id: leadId, updated_at: db.fn.now() });
-        
+        await db('conversations').where({ id: conversation.id }).update({ lead_id: leadId, updated_at: db.fn.now() });
+
         return {
           content: `Thank you, ${contactInfo.firstName}! I have all your information and have created your consultation request. One of our experienced attorneys will contact you within 24 hours to schedule your free consultation. You should also receive a confirmation email shortly. Is there anything else I can help you with today?`,
           metadata: {
@@ -270,33 +271,36 @@ class ConversationFlowService {
             leadId: leadId,
             shouldOfferConsultation: false,
             isDataCollection: false,
-            suggestedActions: ['conversation_complete']
-          }
+            suggestedActions: ['conversation_complete'],
+          },
         };
       } catch (error) {
         logger.error('Error creating lead:', error);
         return {
-          content: "I apologize, but I encountered an issue while saving your information. Please try again, or feel free to call our office directly to schedule your consultation.",
+          content:
+            'I apologise, but I encountered an issue while saving your information. Please try again, or feel free to call our office directly to schedule your consultation.',
           metadata: {
             intent: 'error_recovery',
             shouldOfferConsultation: true,
             isDataCollection: false,
-            suggestedActions: ['retry_contact_collection']
-          }
+            suggestedActions: ['retry_contact_collection'],
+          },
         };
       }
     } else {
       // Request missing information
       const missingFields = this.getMissingContactFields(contactInfo);
       return {
-        content: `I have some of your information, but I still need ${missingFields.join(' and ')}. Could you please provide the missing details?`,
+        content: `I have some of your information, but I still need ${missingFields.join(
+          ' and '
+        )}. Could you please provide the missing details?`,
         metadata: {
           intent: 'incomplete_data',
           missingFields,
           shouldOfferConsultation: false,
           isDataCollection: true,
-          suggestedActions: ['collect_missing_info']
-        }
+          suggestedActions: ['collect_missing_info'],
+        },
       };
     }
   }
@@ -308,13 +312,14 @@ class ConversationFlowService {
     // This would integrate with calendar service
     // For now, return a generic response
     return {
-      content: "Our calendar integration is being set up. In the meantime, one of our attorneys will contact you within 24 hours to schedule your consultation at a time that works for you.",
+      content:
+        'Our calendar integration is being set up. In the meantime, one of our attorneys will contact you within 24 hours to schedule your consultation at a time that works for you.',
       metadata: {
         intent: 'scheduling_pending',
         shouldOfferConsultation: false,
         isDataCollection: false,
-        suggestedActions: ['manual_scheduling']
-      }
+        suggestedActions: ['manual_scheduling'],
+      },
     };
   }
 
@@ -323,23 +328,32 @@ class ConversationFlowService {
    */
   shouldOfferConsultation(userMessage, messageHistory) {
     const complexityIndicators = [
-      'my case', 'my situation', 'what should i do', 'need help with',
-      'been charged', 'facing', 'court', 'legal action', 'dispute',
-      'contract', 'divorce', 'custody', 'arrested', 'sued', 'injured'
+      'my case',
+      'my situation',
+      'what should i do',
+      'need help with',
+      'been charged',
+      'facing',
+      'court',
+      'legal action',
+      'dispute',
+      'contract',
+      'divorce',
+      'custody',
+      'arrested',
+      'sued',
+      'injured',
     ];
-    
+
     const userLower = userMessage.toLowerCase();
-    const hasComplexityIndicator = complexityIndicators.some(indicator => 
-      userLower.includes(indicator)
-    );
-    
+    const hasComplexityIndicator = complexityIndicators.some(indicator => userLower.includes(indicator));
+
     // Also check if this is the 3rd+ message without consultation offer
     const userMessageCount = messageHistory.filter(msg => msg.sender_type === 'visitor').length;
-    const hasOfferedConsultation = messageHistory.some(msg => 
-      msg.sender_type === 'bot' && 
-      msg.content.toLowerCase().includes('consultation')
+    const hasOfferedConsultation = messageHistory.some(
+      msg => msg.sender_type === 'bot' && msg.content.toLowerCase().includes('consultation')
     );
-    
+
     return hasComplexityIndicator || (userMessageCount >= 3 && !hasOfferedConsultation);
   }
 
@@ -350,24 +364,22 @@ class ConversationFlowService {
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
     const phoneRegex = /(?:\+27|0)[0-9\s-]{8,}/;
     const nameRegex = /(?:my name is|i'm|i am)\s+([a-zA-Z\s]+)/i;
-    
+
     const email = message.match(emailRegex)?.[0];
     const phone = message.match(phoneRegex)?.[0];
     const nameMatch = message.match(nameRegex)?.[1];
-    
+
     // Try to extract names from the message
     let firstName, lastName;
-    
+
     if (nameMatch) {
       const nameParts = nameMatch.trim().split(/\s+/);
       firstName = nameParts[0];
       lastName = nameParts.slice(1).join(' ');
     } else {
       // Look for name patterns without "my name is"
-      const words = message.split(/\s+/).filter(word => 
-        word.length > 1 && /^[A-Z][a-z]+$/.test(word)
-      );
-      
+      const words = message.split(/\s+/).filter(word => word.length > 1 && /^[A-Z][a-z]+$/.test(word));
+
       if (words.length >= 2) {
         firstName = words[0];
         lastName = words.slice(1).join(' ');
@@ -375,13 +387,13 @@ class ConversationFlowService {
         firstName = words[0];
       }
     }
-    
+
     return {
       firstName,
       lastName,
       email,
       phone,
-      isComplete: firstName && lastName && email && phone
+      isComplete: firstName && lastName && email && phone,
     };
   }
 
@@ -390,7 +402,7 @@ class ConversationFlowService {
    */
   getMissingContactFields(contactInfo) {
     const missing = [];
-    
+
     if (!contactInfo.firstName || !contactInfo.lastName) {
       missing.push('your full name');
     }
@@ -400,7 +412,7 @@ class ConversationFlowService {
     if (!contactInfo.phone) {
       missing.push('your phone number');
     }
-    
+
     return missing;
   }
 
@@ -409,22 +421,20 @@ class ConversationFlowService {
    */
   async createLead(conversationId, contactInfo, tenantId) {
     const db = getDatabase();
-    
+
     // Get conversation context for legal issue
-    const conversation = await db('conversations')
-      .where({ id: conversationId })
-      .first();
-      
+    const conversation = await db('conversations').where({ id: conversationId }).first();
+
     const messages = await db('messages')
       .where({ conversation_id: conversationId, sender_type: 'visitor' })
       .orderBy('sent_at', 'asc');
-    
+
     // Extract legal issue from user messages
     const legalIssue = messages
       .map(msg => msg.content)
       .join(' ')
       .substring(0, 500); // Limit length
-    
+
     const [lead] = await db('leads')
       .insert({
         tenant_id: tenantId,
@@ -438,17 +448,17 @@ class ConversationFlowService {
         metadata: JSON.stringify({
           source: 'chatbot',
           conversationId: conversationId,
-          collectedAt: new Date().toISOString()
-        })
+          collectedAt: new Date().toISOString(),
+        }),
       })
       .returning('id');
-    
+
     logger.info(`Lead created: ${lead.id} for tenant ${tenantId}`);
     return lead.id;
   }
 
   /**
-   * Handle completed consultation state 
+   * Handle completed consultation state
    */
   async handleCompletedState(conversation, userMessage, tenantId) {
     // Consultation is complete, just provide general assistance
@@ -456,9 +466,9 @@ class ConversationFlowService {
       tenantId,
       conversationHistory: conversation.messages.slice(-3), // Keep some context
       userMessage,
-      isConsultationComplete: true
+      isConsultationComplete: true,
     };
-    
+
     return await aiService.generateResponse(userMessage, context);
   }
 

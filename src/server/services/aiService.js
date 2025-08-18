@@ -272,9 +272,8 @@ Remember: Your goal is to be helpful while guiding users toward booking consulta
    */
   getFallbackResponse() {
     const fallbackResponses = [
-      "I apologize, but I'm experiencing technical difficulties at the moment. However, I'd be happy to connect you with one of our attorneys who can assist you. Would you like me to arrange a consultation?",
-      "I'm having trouble processing your request right now. Let me connect you with a qualified attorney who can provide the legal guidance you need. Shall I set up a consultation for you?",
-      "Our AI assistant is temporarily unavailable, but our legal team is ready to help. Would you like to speak with an attorney about your legal matter?"
+      "I apologise, but we're experiencing technical difficulties at the moment. However, I'd be happy to connect you with one of our attorneys who can assist you. Would you like me to arrange a consultation?",
+      "I'm having trouble processing your request right now. Let me connect you with a qualified attorney who can provide the legal guidance you need. Shall I set up a consultation for you?"
     ];
     
     const randomIndex = Math.floor(Math.random() * fallbackResponses.length);
@@ -332,7 +331,7 @@ Remember: Your goal is to be helpful while guiding users toward booking consulta
     } catch (error) {
       logger.error('Error generating welcome message:', error);
       return {
-        content: "Hello! Welcome to our law firm. I'm here to help answer your legal questions and connect you with our attorneys. How can I assist you today?",
+        content: "Good day! Welcome to our law firm. I'm here to assist you with your legal enquiries and connect you with our qualified attorneys. How may I help you today?",
         metadata: {
           intent: 'greeting',
           shouldOfferConsultation: false,
