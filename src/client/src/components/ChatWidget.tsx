@@ -167,6 +167,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     try {
       setIsLoading(true);
+      
+      // Show typing indicator for AI processing
+      setIsTyping(true);
+      setTypingUser('Legal Assistant');
 
       // Send message via socket for real-time updates (will come back via onMessage)
       socketService.sendVisitorMessage(content.trim());
@@ -183,6 +187,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     } catch (error) {
       console.error('Failed to send message:', error);
       setError('Failed to send message');
+      // Hide typing indicator on error
+      setIsTyping(false);
     } finally {
       setIsLoading(false);
     }

@@ -9,7 +9,7 @@ class ApiService {
     
     this.api = axios.create({
       baseURL: this.baseURL,
-      timeout: 10000,
+      timeout: 30000, // Increased to 30 seconds for AI responses
       headers: {
         'Content-Type': 'application/json',
       },
@@ -91,6 +91,8 @@ class ApiService {
       message,
       conversationId,
       visitorId,
+    }, {
+      timeout: 45000, // Extended timeout for AI processing (45 seconds)
     });
     return response.data;
   }

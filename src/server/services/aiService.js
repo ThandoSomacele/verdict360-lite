@@ -87,35 +87,35 @@ class AIService {
    * Build the system prompt with South African legal context
    */
   buildSystemPrompt(tenantContext) {
-    return `You are a helpful legal assistant chatbot for ${tenantContext.companyName}, a law firm in South Africa. Your role is to:
+    return `You are a knowledgeable legal assistant for ${tenantContext.companyName}, a law firm in South Africa. Your role is to:
 
-1. SCOPE: Only provide information about South African law - never international legal advice
-2. PURPOSE: Help website visitors with basic legal questions and guide them to book consultations
-3. TONE: Professional but approachable, concise and helpful
-4. GOAL: Convert visitors to consultation bookings efficiently
+1. HELP users understand basic South African legal concepts and procedures
+2. PROVIDE general legal information (not specific legal advice)
+3. ENGAGE naturally in conversation before offering consultations
+4. MAINTAIN professional but friendly tone
 
 PRACTICE AREAS: ${tenantContext.practiceAreas.join(', ')}
 
-IMPORTANT LIMITATIONS:
-- Always clarify you provide general legal information, not legal advice
-- For complex issues, say "This is possible and can be done like this..." then offer consultation
-- Never give specific legal advice or guarantee outcomes
-- Always recommend consulting with an attorney for specific situations
-- Keep responses under 150 words
+CONVERSATION APPROACH:
+- GREETINGS: Respond warmly and simply ask "How can I help you today?" - NO additional questions
+- BASIC QUESTIONS: Provide helpful South African legal information
+- COMPLEX MATTERS: Explain general principles, then suggest consultation if appropriate
+- CONSULTATION TIMING: Only after 2-3 exchanges OR clear complex legal issues
+- Keep responses under 100 words for better readability
 
-CONVERSATION FLOW:
-1. Answer basic legal questions within South African context
-2. For complex issues, provide brief overview then offer consultation
-3. If user shows interest, ask: "Would you like me to connect you with an attorney who can better assist you?"
-4. If yes, say: "Can I assist with setting up a meeting for a free consultation?"
-5. Collect: Name, Surname, Email, Phone Number
-6. Confirm booking: "We've booked that time slot, you'll hear from one of our attorneys soon"
+IMPORTANT RULES:
+- Provide general legal information, never specific legal advice
+- Reference relevant SA laws when helpful (Labour Relations Act, Companies Act, etc.)
+- Mention courts/institutions when relevant (CCMA, High Court, etc.)
+- Consider POPIA for privacy matters
+- Always clarify this is general information, not legal advice
+- Be helpful first, consultative second
 
-SOUTH AFRICAN LEGAL CONTEXT:
-- Reference relevant SA laws (e.g., Labour Relations Act, Companies Act, Consumer Protection Act)
-- Mention institutions like CCMA, CIPC, High Court, Magistrate's Court when relevant
-- Use SA legal terminology and procedures
-- Consider POPIA (Protection of Personal Information Act) for privacy matters
+CONSULTATION OFFERING:
+- Only suggest consultation for complex matters or after establishing rapport
+- Ask: "Would you like me to connect you with one of our attorneys?"
+- If yes, collect: Full name, email, phone number
+- Confirm: "Thank you! An attorney will contact you within 24 hours."
 
 Remember: Your goal is to be helpful while guiding users toward booking consultations with qualified attorneys.`;
   }
@@ -206,28 +206,44 @@ Remember: Your goal is to be helpful while guiding users toward booking consulta
   analyzeResponse(response, context) {
     const lowerResponse = response.toLowerCase();
     
-    // Keywords that suggest consultation should be offered
-    const consultationTriggers = [
-      'complex', 'specific', 'detailed', 'consult', 'attorney', 'lawyer',
-      'depends on', 'case by case', 'recommend speaking', 'should discuss'
+    // Check if this is a greeting response (should not trigger consultation)
+    const greetingIndicators = [
+      'hello', 'hi', 'welcome', 'good morning', 'good afternoon', 'how can i help'
+    ];
+    const isGreetingResponse = greetingIndicators.some(indicator => 
+      lowerResponse.includes(indicator)
+    );
+    
+    // Strong consultation triggers (explicit consultation language)
+    const strongConsultationTriggers = [
+      'recommend consulting', 'speak with an attorney', 'consult with a lawyer',
+      'schedule a consultation', 'book an appointment', 'contact our office'
     ];
     
-    // Keywords that suggest data collection phase
-    const dataCollectionTriggers = [
-      'name', 'email', 'phone', 'contact', 'details', 'information'
+    // Data collection triggers (explicit request for contact info)
+    const explicitDataCollectionTriggers = [
+      'please provide your name', 'need your contact information', 
+      'can i get your email', 'may i have your phone number',
+      'collect your details', 'need your information to proceed'
     ];
     
-    const shouldOfferConsultation = consultationTriggers.some(trigger => 
+    const hasStrongConsultationTrigger = strongConsultationTriggers.some(trigger => 
       lowerResponse.includes(trigger)
     );
     
-    const isDataCollection = dataCollectionTriggers.some(trigger => 
+    const hasExplicitDataCollection = explicitDataCollectionTriggers.some(trigger => 
       lowerResponse.includes(trigger)
     );
+    
+    // Don't trigger consultation/data collection for greeting responses
+    const shouldOfferConsultation = !isGreetingResponse && hasStrongConsultationTrigger;
+    const isDataCollection = !isGreetingResponse && hasExplicitDataCollection;
     
     // Determine intent
     let intent = 'general_inquiry';
-    if (isDataCollection) {
+    if (isGreetingResponse) {
+      intent = 'greeting';
+    } else if (isDataCollection) {
       intent = 'data_collection';
     } else if (shouldOfferConsultation) {
       intent = 'consultation_offer';
@@ -239,7 +255,7 @@ Remember: Your goal is to be helpful while guiding users toward booking consulta
       intent,
       shouldOfferConsultation,
       isDataCollection,
-      confidenceScore: 0.8, // Could be improved with ML models
+      confidenceScore: 0.8,
       suggestedActions: this.getSuggestedActions(intent, context)
     };
   }

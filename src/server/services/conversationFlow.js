@@ -103,14 +103,15 @@ class ConversationFlowService {
     // Look for consultation-related keywords in recent messages
     const recentMessages = messages.slice(-5);
 
-    // Check if we're collecting contact information
+    // Check if we're collecting contact information (explicit data collection)
     const hasContactRequest = recentMessages.some(
       msg =>
         msg.sender_type === 'bot' &&
-        (msg.content.toLowerCase().includes('contact') ||
-          msg.content.toLowerCase().includes('name') ||
-          msg.content.toLowerCase().includes('email') ||
-          msg.content.toLowerCase().includes('phone'))
+        (msg.content.toLowerCase().includes('contact information') ||
+          msg.content.toLowerCase().includes('provide your name') ||
+          msg.content.toLowerCase().includes('your email') ||
+          msg.content.toLowerCase().includes('your phone number') ||
+          msg.content.toLowerCase().includes('collect your details'))
     );
 
     if (hasContactRequest) {
@@ -227,7 +228,7 @@ class ConversationFlowService {
     // First check if a lead has already been created for this conversation
     const db = getDatabase();
     const existingLead = await db('leads')
-      .where('metadata', 'like', `%"conversationId":"${conversation.id}"%`)
+      .whereRaw("metadata::text LIKE ?", [`%"conversationId":"${conversation.id}"%`])
       .orWhere(function () {
         this.whereExists(function () {
           this.select('*')
@@ -250,6 +251,33 @@ class ConversationFlowService {
           suggestedActions: ['conversation_complete'],
         },
       };
+    }
+
+    // Check if user is asking a question instead of providing contact info
+    const questionIndicators = [
+      'what', 'how', 'can', 'should', 'will', 'before that', 'wait',
+      'tell me', 'explain', 'help', '?'
+    ];
+    
+    const isAsking = questionIndicators.some(indicator => 
+      userMessage.toLowerCase().includes(indicator)
+    );
+    
+    // If user is asking a question, respond normally instead of collecting data
+    if (isAsking && !userMessage.toLowerCase().includes('@')) {
+      const context = {
+        tenantId,
+        conversationHistory: conversation.messages,
+        userMessage,
+      };
+      
+      const response = await aiService.generateResponse(userMessage, context);
+      
+      // After answering, remind about consultation setup
+      response.content += '\n\nWhen you\'re ready, I can still help set up that consultation with one of our attorneys.';
+      response.metadata.shouldOfferConsultation = true;
+      
+      return response;
     }
 
     const contactInfo = this.extractContactInfo(userMessage);
@@ -329,32 +357,40 @@ class ConversationFlowService {
   shouldOfferConsultation(userMessage, messageHistory) {
     const complexityIndicators = [
       'my case',
-      'my situation',
+      'my situation', 
       'what should i do',
-      'need help with',
+      'need legal help',
       'been charged',
-      'facing',
-      'court',
+      'facing court',
       'legal action',
       'dispute',
-      'contract',
       'divorce',
       'custody',
       'arrested',
       'sued',
-      'injured',
+      'injured in accident',
+      'employment issue',
+      'contract dispute'
     ];
 
     const userLower = userMessage.toLowerCase();
     const hasComplexityIndicator = complexityIndicators.some(indicator => userLower.includes(indicator));
 
-    // Also check if this is the 3rd+ message without consultation offer
+    // Only offer consultation after 4+ messages OR clear complexity indicators
     const userMessageCount = messageHistory.filter(msg => msg.sender_type === 'visitor').length;
     const hasOfferedConsultation = messageHistory.some(
       msg => msg.sender_type === 'bot' && msg.content.toLowerCase().includes('consultation')
     );
 
-    return hasComplexityIndicator || (userMessageCount >= 3 && !hasOfferedConsultation);
+    // Don't offer consultation for simple greetings or basic questions
+    const simpleGreetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon'];
+    const isSimpleGreeting = simpleGreetings.some(greeting => userLower.trim() === greeting);
+
+    if (isSimpleGreeting && userMessageCount <= 1) {
+      return false;
+    }
+
+    return hasComplexityIndicator || (userMessageCount >= 4 && !hasOfferedConsultation);
   }
 
   /**
