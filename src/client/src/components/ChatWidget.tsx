@@ -56,10 +56,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       setIsLoading(true);
       setError(null);
 
-      // Connect to socket
-      await socketService.connect();
-      
-      // Set up socket event handlers
+      // Set up socket event handlers first
       socketService.setEventHandlers({
         onConnect: () => {
           console.log('✅ Socket connected');
@@ -92,6 +89,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           setError(error.message);
         },
       });
+
+      // Connect to socket
+      await socketService.connect();
+      
+      // Check if already connected (in case the connection happened immediately)
+      if (socketService.isConnected()) {
+        console.log('✅ Socket already connected');
+        setIsConnected(true);
+      }
 
       // Get tenant information
       const tenantData = await apiService.getCurrentTenant();
