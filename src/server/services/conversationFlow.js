@@ -178,11 +178,19 @@ class ConversationFlowService {
     const userResponse = userMessage.toLowerCase().trim();
 
     // Check for positive responses
-    const positiveResponses = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'that would be great'];
-    const negativeResponses = ['no', 'nah', 'not now', 'maybe later', 'not interested'];
+    const positiveResponses = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'that would be great', 'connect me'];
+    const negativeResponses = ['no', 'nah', 'not now', 'maybe later', 'not interested', 'not yet'];
 
     const isPositive = positiveResponses.some(phrase => userResponse.includes(phrase));
     const isNegative = negativeResponses.some(phrase => userResponse.includes(phrase));
+
+    // Check if user is asking a follow-up question or providing more information
+    const questionIndicators = [
+      'what', 'how', 'when', 'where', 'why', 'can you', 'should i', 'do i', 'will i',
+      'i need', 'i want', 'i am', 'help me', 'tell me', 'explain', '?'
+    ];
+    
+    const isAsking = questionIndicators.some(indicator => userResponse.includes(indicator));
 
     if (isPositive) {
       return {
@@ -195,7 +203,7 @@ class ConversationFlowService {
           suggestedActions: ['collect_contact_info'],
         },
       };
-    } else if (isNegative) {
+    } else if (isNegative && !isAsking) {
       return {
         content:
           "That's perfectly fine! I'm here should you have any other legal enquiries or if you change your mind about speaking with one of our attorneys. Is there anything else I can assist you with today?",
@@ -206,6 +214,29 @@ class ConversationFlowService {
           suggestedActions: ['continue_conversation'],
         },
       };
+    } else if (isAsking) {
+      // User is asking a follow-up question - provide helpful information then offer consultation again
+      const context = {
+        tenantId,
+        conversationHistory: conversation.messages,
+        userMessage,
+      };
+
+      const response = await aiService.generateResponse(userMessage, context);
+      
+      // Only add consultation offer if AI hasn't already included one
+      const hasConsultationOffer = response.content.toLowerCase().includes('consultation') || 
+                                 response.content.toLowerCase().includes('connect you') ||
+                                 response.content.toLowerCase().includes('attorney');
+      
+      if (!hasConsultationOffer) {
+        response.content += '\n\nWould you like me to connect you with one of our attorneys who can provide more detailed guidance specific to your situation?';
+      }
+      
+      response.metadata.shouldOfferConsultation = true;
+      response.metadata.intent = 'information_with_consultation_offer';
+      
+      return response;
     } else {
       // Unclear response, ask for clarification
       return {

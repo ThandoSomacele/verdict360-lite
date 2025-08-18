@@ -73,7 +73,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         },
         onMessage: (message: Message) => {
           setMessages(prev => [...prev, message]);
-          setIsTyping(false);
+          // Only clear typing indicator if it's an AI/bot response
+          if (message.senderType === 'bot') {
+            setIsTyping(false);
+            setTypingUser(null);
+          }
         },
         onTypingStart: (data) => {
           setIsTyping(true);
@@ -172,15 +176,26 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       setIsTyping(true);
       setTypingUser('Legal Assistant');
 
+      // Set a safety timeout to clear typing indicator if response takes too long
+      const typingTimeout = setTimeout(() => {
+        setIsTyping(false);
+        setTypingUser(null);
+      }, 60000); // 60 seconds max
+
       // Send message via socket for real-time updates (will come back via onMessage)
       socketService.sendVisitorMessage(content.trim());
 
       // Send to AI service for processing
-      await apiService.sendChatMessage(
-        content.trim(),
-        conversation.id,
-        currentVisitorId.current
-      );
+      try {
+        await apiService.sendChatMessage(
+          content.trim(),
+          conversation.id,
+          currentVisitorId.current
+        );
+      } finally {
+        // Clear the safety timeout since we got a response (success or error)
+        clearTimeout(typingTimeout);
+      }
 
       // AI response will come through socket, no need to add here
 
@@ -189,6 +204,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       setError('Failed to send message');
       // Hide typing indicator on error
       setIsTyping(false);
+      setTypingUser(null);
     } finally {
       setIsLoading(false);
     }
