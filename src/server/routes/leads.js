@@ -87,7 +87,7 @@ router.post('/',
 
     // Send confirmation email to client
     try {
-      await emailService.sendConsultationConfirmationEmail(
+      await emailService.sendConsultationConfirmation(
         { firstName, lastName, email, phone },
         req.tenant,
         { type: 'initial_consultation', status: 'pending' }

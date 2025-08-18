@@ -42,6 +42,9 @@ class ConversationFlowService {
         case this.flowStates.SCHEDULING:
           return await this.handleSchedulingState(conversation, userMessage, tenantId);
           
+        case this.flowStates.COMPLETED:
+          return await this.handleCompletedState(conversation, userMessage, tenantId);
+          
         default:
           return await this.handleGatheringInfoState(conversation, userMessage, tenantId);
       }
@@ -84,6 +87,18 @@ class ConversationFlowService {
     
     if (messages.length === 0) {
       return this.flowStates.INITIAL;
+    }
+    
+    // Check if consultation has been confirmed (lead created)
+    const hasLeadConfirmation = messages.some(msg => 
+      msg.sender_type === 'bot' && 
+      (msg.content.includes('consultation request has already been submitted') ||
+       msg.content.includes('have all your information and have created') ||
+       msg.content.includes('consultation request. One of our'))
+    );
+    
+    if (hasLeadConfirmation) {
+      return this.flowStates.COMPLETED;
     }
     
     // Look for consultation-related keywords in recent messages
@@ -206,6 +221,34 @@ class ConversationFlowService {
    * Handle contact information collection state
    */
   async handleCollectingContactState(conversation, userMessage, tenantId) {
+    // First check if a lead has already been created for this conversation
+    const db = getDatabase();
+    const existingLead = await db('leads')
+      .where('metadata', 'like', `%"conversationId":"${conversation.id}"%`)
+      .orWhere(function() {
+        this.whereExists(function() {
+          this.select('*')
+            .from('conversations')
+            .whereRaw('conversations.id = ? AND conversations.lead_id = leads.id', [conversation.id]);
+        });
+      })
+      .first();
+
+    if (existingLead) {
+      // Lead already exists, conversation is complete
+      return {
+        content: `Thank you! Your consultation request has already been submitted. One of our attorneys will contact you within 24 hours. Is there anything else I can help you with today?`,
+        metadata: {
+          intent: 'consultation_already_confirmed',
+          leadCreated: true,
+          leadId: existingLead.id,
+          shouldOfferConsultation: false,
+          isDataCollection: false,
+          suggestedActions: ['conversation_complete']
+        }
+      };
+    }
+
     const contactInfo = this.extractContactInfo(userMessage);
     
     if (contactInfo.isComplete) {
@@ -402,6 +445,21 @@ class ConversationFlowService {
     
     logger.info(`Lead created: ${lead.id} for tenant ${tenantId}`);
     return lead.id;
+  }
+
+  /**
+   * Handle completed consultation state 
+   */
+  async handleCompletedState(conversation, userMessage, tenantId) {
+    // Consultation is complete, just provide general assistance
+    const context = {
+      tenantId,
+      conversationHistory: conversation.messages.slice(-3), // Keep some context
+      userMessage,
+      isConsultationComplete: true
+    };
+    
+    return await aiService.generateResponse(userMessage, context);
   }
 
   /**
