@@ -56,7 +56,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       setIsLoading(true);
       setError(null);
 
-      // Set up socket event handlers first
+      // Get tenant information first
+      const tenantData = await apiService.getCurrentTenant();
+      setTenant(tenantData);
+
+      // Set up socket event handlers with tenant context
       socketService.setEventHandlers({
         onConnect: () => {
           console.log('✅ Socket connected');
@@ -79,7 +83,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           setTypingUser(null);
         },
         onConversationJoined: (data) => {
-          setConversation(data);
+          // Convert the socket data format to our expected conversation format
+          const conversationData: Conversation = {
+            id: data.conversationId,
+            tenantId: tenantData.id,
+            status: data.status,
+            visitorId: currentVisitorId.current,
+            startedAt: new Date().toISOString()
+          };
+          setConversation(conversationData);
           if (data.messages) {
             setMessages(data.messages);
           }
@@ -99,11 +111,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         setIsConnected(true);
       }
 
-      // Get tenant information
-      const tenantData = await apiService.getCurrentTenant();
-      setTenant(tenantData);
 
-      // Join tenant context
+      // Join tenant context  
       socketService.joinTenant(tenantData.id, currentVisitorId.current);
 
       // Start or join conversation
@@ -176,7 +185,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       socketService.sendVisitorMessage(content.trim());
 
       // Send to AI service for processing
-      const aiResponse = await apiService.sendChatMessage(
+      await apiService.sendChatMessage(
         content.trim(),
         conversation.id,
         currentVisitorId.current
