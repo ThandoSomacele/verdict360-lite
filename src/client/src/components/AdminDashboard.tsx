@@ -324,13 +324,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ className }) => {
                 <Input
                   placeholder="Search tenants..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   className="pl-10 w-64"
                 />
               </div>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="all">All Status</option>
