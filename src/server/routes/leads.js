@@ -97,6 +97,19 @@ router.post('/',
       // Don't fail the request if email fails
     }
 
+    // Send attorney notification for demo law firm
+    try {
+      const attorneyEmail = 'thando.somacele@gmail.com';
+      await emailService.sendAttorneyNotification(
+        { firstName, lastName, email, phone, legalIssue: finalLegalIssue },
+        req.tenant,
+        { email: attorneyEmail, firstName: 'Thando', lastName: 'Somacele' }
+      );
+    } catch (error) {
+      logger.error('Failed to send attorney notification:', error);
+      // Don't fail the request if email fails
+    }
+
     res.status(201).json({
       id: lead.id,
       firstName: lead.first_name,
