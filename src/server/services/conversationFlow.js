@@ -159,15 +159,7 @@ class ConversationFlowService {
 
     const response = await aiService.generateResponse(userMessage, context);
 
-    // Check if AI suggests offering consultation
-    if (response.metadata.shouldOfferConsultation || this.shouldOfferConsultation(userMessage, conversation.messages)) {
-      // Modify response to include consultation offer
-      response.content +=
-        '\n\nWould you like me to connect you with one of our attorneys who can better assist you with this matter?';
-      response.metadata.intent = 'consultation_offer';
-      response.metadata.suggestedActions = ['offer_consultation'];
-    }
-
+    // Let the AI handle consultation timing naturally - no forced additions
     return response;
   }
 

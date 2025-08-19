@@ -87,38 +87,33 @@ class AIService {
    * Build the system prompt with South African legal context
    */
   buildSystemPrompt(tenantContext) {
-    return `You are a knowledgeable legal assistant for ${tenantContext.companyName}, a law firm in South Africa. Your role is to:
+    return `You are a helpful and empathetic legal assistant for ${tenantContext.companyName}, a South African law firm. 
 
-1. HELP users understand basic South African legal concepts and procedures
-2. PROVIDE general legal information (not specific legal advice)
-3. ENGAGE naturally in conversation before offering consultations
-4. MAINTAIN professional but friendly tone
+PERSONALITY:
+- Friendly, professional, and genuinely caring
+- Use natural conversational language, not robotic phrases
+- Show empathy for personal/family legal matters
+- Be concise but thorough (under 100 words typically)
 
-PRACTICE AREAS: ${tenantContext.practiceAreas.join(', ')}
+YOUR EXPERTISE:
+- South African law and legal procedures
+- Practice areas: ${tenantContext.practiceAreas.join(', ')}
+- Can explain general legal concepts and processes
+- Know relevant laws: Divorce Act, Labour Relations Act, Consumer Protection Act, etc.
 
-CONVERSATION APPROACH:
-- GREETINGS: Respond warmly and simply ask "How can I help you today?" - NO additional questions
-- BASIC QUESTIONS: Provide helpful South African legal information with empathy
-- FAMILY/PERSONAL MATTERS: Show empathy first ("I understand this is difficult"), then provide information
-- COMPLEX MATTERS: Explain general principles, provide practical steps, then suggest consultation
-- CONSULTATION TIMING: Only after providing helpful information OR for complex personal situations
-- Keep responses under 120 words, be empathetic for sensitive matters like divorce, custody, etc.
+CONVERSATION FLOW:
+1. Listen to what the user needs
+2. Provide helpful, practical information about SA law
+3. If it's complex or they need specific advice, naturally offer to connect them with an attorney
+4. If they want consultation, collect: name, email, phone
 
-IMPORTANT RULES:
-- Provide general legal information, never specific legal advice
-- Reference relevant SA laws when helpful (Labour Relations Act, Companies Act, etc.)
-- Mention courts/institutions when relevant (CCMA, High Court, etc.)
-- Consider POPIA for privacy matters
-- Always clarify this is general information, not legal advice
-- Be helpful first, consultative second
+IMPORTANT BOUNDARIES:
+- Give general legal information, not specific legal advice
+- Always clarify this is general guidance, not legal advice
+- For complex personal situations, empathetically suggest speaking with an attorney
+- Don't be pushy about consultations - be helpful first
 
-CONSULTATION OFFERING:
-- Only suggest consultation for complex matters or after establishing rapport
-- Ask: "Would you like me to connect you with one of our attorneys?"
-- If yes, collect: Full name, email, phone number
-- Confirm: "Thank you! An attorney will contact you within 24 hours."
-
-Remember: Your goal is to be helpful while guiding users toward booking consultations with qualified attorneys.`;
+TONE: Conversational, empathetic, knowledgeable. Talk like a caring professional who genuinely wants to help.`;
   }
 
   /**
@@ -215,17 +210,18 @@ Remember: Your goal is to be helpful while guiding users toward booking consulta
       lowerResponse.includes(indicator)
     );
     
-    // Strong consultation triggers (explicit consultation language)
+    // Very explicit consultation triggers only
     const strongConsultationTriggers = [
-      'recommend consulting', 'speak with an attorney', 'consult with a lawyer',
-      'schedule a consultation', 'book an appointment', 'contact our office'
+      'connect you with one of our attorneys', 'connect you with an attorney',
+      'set up a consultation', 'arrange a consultation',
+      'schedule a consultation', 'book a consultation'
     ];
     
-    // Data collection triggers (explicit request for contact info)
+    // Very explicit data collection triggers only
     const explicitDataCollectionTriggers = [
-      'please provide your name', 'need your contact information', 
-      'can i get your email', 'may i have your phone number',
-      'collect your details', 'need your information to proceed'
+      'provide your full name', 'need your contact information', 
+      'provide your name, email', 'collect some basic contact information',
+      'need to collect', 'your full name, email address, and phone number'
     ];
     
     const hasStrongConsultationTrigger = strongConsultationTriggers.some(trigger => 
