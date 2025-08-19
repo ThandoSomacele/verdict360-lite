@@ -85,7 +85,7 @@ exports.seed = async function(knex) {
         secondaryColor: '#8b5cf6',
         logo: 'https://example.com/pretoria-logo.png',
         companyName: 'Pretoria Family Law Center',
-        welcomeMessage: 'Welcome to Pretoria Family Law Center. We specialize in family matters and are here to help.'
+        welcomeMessage: 'Welcome to Pretoria Family Law Center. We specialise in family matters and are here to help.'
       }),
       settings: JSON.stringify({
         businessHours: {

@@ -326,7 +326,7 @@ TONE: Conversational, empathetic, knowledgeable. Talk like a caring professional
       
       // Generate dynamic welcome message
       const practiceAreasText = tenantContext.practiceAreas.length > 0 
-        ? ` We specialize in ${tenantContext.practiceAreas.slice(0, 3).join(', ')}.`
+        ? ` We specialise in ${tenantContext.practiceAreas.slice(0, 3).join(', ')}.`
         : '';
       
       const welcomeContent = `Hello! Welcome to ${tenantContext.companyName}.${practiceAreasText} I'm here to help answer your legal questions and connect you with our experienced attorneys. How can I assist you today?`;
