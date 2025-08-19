@@ -203,6 +203,12 @@ class ConversationFlowService {
       'help me',
       'tell me',
       'explain',
+      'more info',
+      'more information',
+      'tell me more',
+      'details',
+      'elaborate',
+      'more details',
       '?',
     ];
 

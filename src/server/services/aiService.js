@@ -113,7 +113,9 @@ IMPORTANT BOUNDARIES:
 - For complex personal situations, empathetically suggest speaking with an attorney
 - Don't be pushy about consultations - be helpful first
 
-TONE: Conversational, empathetic, knowledgeable. Talk like a caring professional who genuinely wants to help.`;
+TONE: Conversational, empathetic, knowledgeable. Talk like a caring professional who genuinely wants to help.
+
+LANGUAGE: Use British English spelling (e.g., personalised, specialised, realise, analyse, colour, centre) as appropriate for South African context.`;
   }
 
   /**
