@@ -1,5 +1,6 @@
 const aiService = require('./aiService');
 const { getDatabase } = require('../config/db');
+const calendarService = require('./calendarService');
 const logger = require('../utils/logger');
 
 class ConversationFlowService {
@@ -9,6 +10,7 @@ class ConversationFlowService {
       GATHERING_INFO: 'gathering_info',
       OFFERING_CONSULTATION: 'offering_consultation',
       COLLECTING_CONTACT: 'collecting_contact',
+      SLOT_SELECTION: 'slot_selection',
       SCHEDULING: 'scheduling',
       COMPLETED: 'completed',
     };
@@ -38,6 +40,9 @@ class ConversationFlowService {
 
         case this.flowStates.COLLECTING_CONTACT:
           return await this.handleCollectingContactState(conversation, userMessage, tenantId);
+
+        case this.flowStates.SLOT_SELECTION:
+          return await this.handleSlotSelectionState(conversation, userMessage, tenantId);
 
         case this.flowStates.SCHEDULING:
           return await this.handleSchedulingState(conversation, userMessage, tenantId);
@@ -116,6 +121,19 @@ class ConversationFlowService {
 
     if (hasContactRequest) {
       return this.flowStates.COLLECTING_CONTACT;
+    }
+
+    // Check if showing available appointment slots
+    const hasSlotOffer = recentMessages.some(
+      msg =>
+        msg.sender_type === 'bot' &&
+        (msg.content.toLowerCase().includes('consultation times') ||
+          msg.content.toLowerCase().includes('which time works best') ||
+          msg.content.toLowerCase().includes('please let me know which time'))
+    );
+
+    if (hasSlotOffer) {
+      return this.flowStates.SLOT_SELECTION;
     }
 
     // Check if consultation was offered
@@ -363,17 +381,51 @@ class ConversationFlowService {
         const db = getDatabase();
         await db('conversations').where({ id: conversation.id }).update({ lead_id: leadId, updated_at: db.fn.now() });
 
-        return {
-          content: `Thank you, ${contactInfo.firstName}! I have all your information and have created your consultation request. One of our experienced attorneys will contact you within 24 hours to schedule your free consultation. You should also receive a confirmation email shortly. Is there anything else I can help you with today?`,
-          metadata: {
-            intent: 'consultation_confirmed',
-            leadCreated: true,
-            leadId: leadId,
-            shouldOfferConsultation: false,
-            isDataCollection: false,
-            suggestedActions: ['conversation_complete'],
-          },
+        // Try to book calendar appointment automatically
+        const leadData = {
+          firstName: contactInfo.firstName,
+          lastName: contactInfo.lastName,
+          email: contactInfo.email,
+          phone: contactInfo.phone,
+          legalIssue: await this.extractLegalIssueFromConversation(conversation.id)
         };
+
+        const appointmentResult = await aiService.handleAppointmentBooking(tenantId, leadData);
+
+        if (appointmentResult.success) {
+          return {
+            content: `Thank you, ${contactInfo.firstName}! ${appointmentResult.message} You should also receive a confirmation email shortly. Is there anything else I can help you with today?`,
+            metadata: {
+              intent: 'consultation_confirmed',
+              leadCreated: true,
+              leadId: leadId,
+              appointmentBooked: true,
+              appointmentId: appointmentResult.appointment.id,
+              shouldOfferConsultation: false,
+              isDataCollection: false,
+              suggestedActions: ['conversation_complete'],
+            },
+          };
+        } else {
+          // Calendar booking failed, offer available slots or fallback
+          if (appointmentResult.requiresManualScheduling) {
+            return {
+              content: `Thank you, ${contactInfo.firstName}! I have all your information and have created your consultation request. ${appointmentResult.message} You should also receive a confirmation email shortly. Is there anything else I can help you with today?`,
+              metadata: {
+                intent: 'consultation_confirmed',
+                leadCreated: true,
+                leadId: leadId,
+                appointmentBooked: false,
+                shouldOfferConsultation: false,
+                isDataCollection: false,
+                suggestedActions: ['conversation_complete'],
+              },
+            };
+          } else {
+            // Try to show available slots
+            return await this.offerAvailableSlots(tenantId, leadId, contactInfo.firstName);
+          }
+        }
       } catch (error) {
         logger.error('Error creating lead:', error);
         return {
@@ -406,14 +458,93 @@ class ConversationFlowService {
   }
 
   /**
+   * Handle slot selection state
+   */
+  async handleSlotSelectionState(conversation, userMessage, tenantId) {
+    const userResponse = userMessage.toLowerCase().trim();
+    
+    // Check for slot selection (1, 2, 3, or "first", "second", etc.)
+    const slotPattern = /\b(1|2|3|first|second|third|one|two|three)\b/;
+    const slotMatch = userResponse.match(slotPattern);
+    
+    if (slotMatch) {
+      // Map response to slot index
+      let slotIndex;
+      const match = slotMatch[1];
+      if (match === '1' || match === 'first' || match === 'one') slotIndex = 0;
+      else if (match === '2' || match === 'second' || match === 'two') slotIndex = 1;
+      else if (match === '3' || match === 'third' || match === 'three') slotIndex = 2;
+      
+      // Get the lead information and available slots from the last message
+      const lastBotMessage = conversation.messages
+        .filter(msg => msg.sender_type === 'bot')
+        .pop();
+      
+      if (lastBotMessage?.metadata?.availableSlots && lastBotMessage.metadata.availableSlots[slotIndex]) {
+        const selectedSlot = lastBotMessage.metadata.availableSlots[slotIndex];
+        const leadId = lastBotMessage.metadata.leadId;
+        
+        // Book the selected appointment slot
+        try {
+          const db = getDatabase();
+          const lead = await db('leads').where({ id: leadId }).first();
+          
+          if (lead) {
+            const leadData = {
+              firstName: lead.first_name,
+              lastName: lead.last_name,
+              email: lead.email,
+              phone: lead.phone,
+              legalIssue: lead.legal_issue
+            };
+            
+            const appointmentResult = await aiService.handleAppointmentBooking(
+              tenantId, 
+              leadData, 
+              selectedSlot.datetime
+            );
+            
+            if (appointmentResult.success) {
+              return {
+                content: `Perfect! ${appointmentResult.message} You should receive a calendar invitation and confirmation email shortly. Is there anything else I can help you with today?`,
+                metadata: {
+                  intent: 'consultation_confirmed',
+                  appointmentBooked: true,
+                  appointmentId: appointmentResult.appointment.id,
+                  selectedSlot: selectedSlot,
+                  shouldOfferConsultation: false,
+                  isDataCollection: false,
+                  suggestedActions: ['conversation_complete'],
+                },
+              };
+            }
+          }
+        } catch (error) {
+          logger.error('Error booking selected appointment slot:', error);
+        }
+      }
+    }
+    
+    // If slot selection failed or wasn't recognized
+    return {
+      content: "I didn't quite catch which time you'd prefer. Could you please let me know which option works best for you? You can say '1', '2', or '3', or let me know if you'd prefer a different day.",
+      metadata: {
+        intent: 'slot_clarification',
+        shouldOfferConsultation: false,
+        isDataCollection: false,
+        suggestedActions: ['clarify_slot_selection'],
+      },
+    };
+  }
+
+  /**
    * Handle scheduling state
    */
   async handleSchedulingState(conversation, userMessage, tenantId) {
-    // This would integrate with calendar service
-    // For now, return a generic response
+    // This would integrate with calendar service for custom scheduling
     return {
       content:
-        'Our calendar integration is being set up. In the meantime, one of our attorneys will contact you within 24 hours to schedule your consultation at a time that works for you.',
+        'Let me check our available times and get back to you with some options. One of our attorneys will contact you within 24 hours to schedule your consultation at a time that works for you.',
       metadata: {
         intent: 'scheduling_pending',
         shouldOfferConsultation: false,
@@ -585,6 +716,85 @@ class ConversationFlowService {
    */
   async generateWelcomeMessage(tenantId) {
     return await aiService.generateWelcomeMessage(tenantId);
+  }
+
+  /**
+   * Extract legal issue from conversation history for calendar booking
+   */
+  async extractLegalIssueFromConversation(conversationId) {
+    try {
+      const db = getDatabase();
+      const messages = await db('messages')
+        .where({ conversation_id: conversationId, sender_type: 'visitor' })
+        .orderBy('sent_at', 'asc')
+        .limit(5); // Get first 5 visitor messages
+
+      // Extract legal issue from user messages
+      const legalIssue = messages
+        .map(msg => msg.content)
+        .join(' ')
+        .substring(0, 500); // Limit length
+
+      return legalIssue || 'General legal consultation';
+    } catch (error) {
+      logger.error('Error extracting legal issue:', error);
+      return 'General legal consultation';
+    }
+  }
+
+  /**
+   * Offer available appointment slots to user
+   */
+  async offerAvailableSlots(tenantId, leadId, firstName) {
+    try {
+      const slotsResult = await aiService.getAvailableAppointmentSlots(tenantId);
+      
+      if (slotsResult.available && slotsResult.slots.length > 0) {
+        const slotOptions = slotsResult.slots
+          .map((slot, index) => `${index + 1}. ${slot.time}`)
+          .join('\n');
+        
+        return {
+          content: `Thank you, ${firstName}! I have your details and can offer you these consultation times for ${slotsResult.date}:\n\n${slotOptions}\n\nPlease let me know which time works best for you, or if you'd prefer a different day.`,
+          metadata: {
+            intent: 'slot_selection',
+            leadCreated: true,
+            leadId: leadId,
+            availableSlots: slotsResult.slots,
+            shouldOfferConsultation: false,
+            isDataCollection: false,
+            suggestedActions: ['select_appointment_slot'],
+          },
+        };
+      } else {
+        return {
+          content: `Thank you, ${firstName}! I have all your information and have created your consultation request. ${slotsResult.message} You should also receive a confirmation email shortly.`,
+          metadata: {
+            intent: 'consultation_confirmed',
+            leadCreated: true,
+            leadId: leadId,
+            appointmentBooked: false,
+            shouldOfferConsultation: false,
+            isDataCollection: false,
+            suggestedActions: ['conversation_complete'],
+          },
+        };
+      }
+    } catch (error) {
+      logger.error('Error offering appointment slots:', error);
+      return {
+        content: `Thank you, ${firstName}! I have all your information and have created your consultation request. We will contact you within 24 hours to schedule your consultation. You should also receive a confirmation email shortly.`,
+        metadata: {
+          intent: 'consultation_confirmed',
+          leadCreated: true,
+          leadId: leadId,
+          appointmentBooked: false,
+          shouldOfferConsultation: false,
+          isDataCollection: false,
+          suggestedActions: ['conversation_complete'],
+        },
+      };
+    }
   }
 }
 
