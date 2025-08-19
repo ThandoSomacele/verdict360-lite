@@ -182,7 +182,7 @@ TONE: Conversational, empathetic, knowledgeable. Talk like a caring professional
     const cleanedResponse = response.trim();
     
     // Analyse response for conversation flow triggers
-    const analysis = this.analyseResponse(cleanedResponse, context);
+    const analysis = this.analyzeResponse(cleanedResponse, context);
     
     return {
       content: cleanedResponse,
@@ -199,7 +199,7 @@ TONE: Conversational, empathetic, knowledgeable. Talk like a caring professional
   /**
    * Analyse response to determine conversation flow
    */
-  analyseResponse(response, context) {
+  analyzeResponse(response, context) {
     const lowerResponse = response.toLowerCase();
     
     // Check if this is a greeting response (should not trigger consultation)
