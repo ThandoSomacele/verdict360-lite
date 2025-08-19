@@ -1,4 +1,5 @@
 import React from 'react';
+import './TypingIndicator.css';
 
 interface TypingIndicatorProps {
   user: string;
@@ -26,10 +27,10 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ user, theme = 'light'
             <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               {user} is typing
             </span>
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '400ms' }}></div>
+            <div className="typing-dots flex space-x-1 items-center h-4">
+              <div className="typing-dot typing-dot-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="typing-dot typing-dot-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="typing-dot typing-dot-3 w-2 h-2 bg-blue-500 rounded-full"></div>
             </div>
           </div>
         </div>
