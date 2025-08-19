@@ -761,6 +761,7 @@ class ConversationFlowService {
             leadCreated: true,
             leadId: leadId,
             availableSlots: slotsResult.slots,
+            date: slotsResult.date,
             shouldOfferConsultation: false,
             isDataCollection: false,
             suggestedActions: ['select_appointment_slot'],

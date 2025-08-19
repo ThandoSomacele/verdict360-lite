@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Message, Tenant } from '../types';
+import CalendarSlotPicker from './CalendarSlotPicker';
 
 interface ContactFormData {
   name: string;
@@ -14,9 +15,10 @@ interface ChatMessageProps {
   onConsultationRequest?: () => void;
   onContinueChat?: () => void;
   onContactSubmit?: (contactData: ContactFormData) => void;
+  onSlotSelect?: (slot: any) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'light', onConsultationRequest, onContinueChat, onContactSubmit }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'light', onConsultationRequest, onContinueChat, onContactSubmit, onSlotSelect }) => {
   const [contactData, setContactData] = useState<ContactFormData>({
     name: '',
     email: '',
@@ -185,6 +187,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
                 </button>
               </div>
             </form>
+          )}
+
+          {/* Show calendar slot picker if available slots */}
+          {message.metadata?.availableSlots && message.metadata?.intent === 'slot_selection' && (
+            <CalendarSlotPicker
+              date={message.metadata.date || new Date().toISOString()}
+              slots={message.metadata.availableSlots}
+              onSlotSelect={(slot) => {
+                if (onSlotSelect) {
+                  onSlotSelect(slot);
+                }
+              }}
+              theme={theme}
+            />
           )}
         </div>
         <div className="flex items-center mt-1">

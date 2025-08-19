@@ -308,6 +308,38 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     }
   };
 
+  const handleSlotSelect = async (slot: any) => {
+    if (!conversation) return;
+
+    try {
+      setIsLoading(true);
+      
+      // Show typing indicator for processing
+      setIsTyping(true);
+      setTypingUser('Legal Assistant');
+
+      // Send slot selection message for backend processing
+      const slotMessage = `${slot.id}`;
+      socketService.sendVisitorMessage(slotMessage);
+
+      // Send to API for processing
+      await apiService.sendChatMessage(
+        slotMessage,
+        conversation.id,
+        currentVisitorId.current
+      );
+
+    } catch (error) {
+      console.error('Failed to select slot:', error);
+      setError('Failed to book appointment');
+      // Hide typing indicator on error
+      setIsTyping(false);
+      setTypingUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
@@ -405,6 +437,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                 onConsultationRequest={handleConsultationRequest}
                 onContinueChat={handleContinueChat}
                 onContactSubmit={handleContactSubmit}
+                onSlotSelect={handleSlotSelect}
               />
             ))}
 
