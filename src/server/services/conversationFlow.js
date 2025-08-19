@@ -204,6 +204,7 @@ class ConversationFlowService {
       'tell me',
       'explain',
       'more info',
+      'more ibfo',
       'more information',
       'tell me more',
       'details',
@@ -308,7 +309,7 @@ class ConversationFlowService {
       };
     }
 
-    // Check if user is asking a question instead of providing contact info
+    // Check if user is asking a question or changing their mind instead of providing contact info
     const questionIndicators = [
       'what',
       'how',
@@ -320,6 +321,17 @@ class ConversationFlowService {
       'tell me',
       'explain',
       'help',
+      'more info',
+      'more ibfo',
+      'more information',
+      'tell me more',
+      'details',
+      'elaborate',
+      'more details',
+      'i meant',
+      'actually',
+      'no i',
+      'sorry i meant',
       '?',
     ];
 
