@@ -275,7 +275,7 @@ class ChatSocketService {
         .first();
 
       if (!user || (user.role !== 'attorney' && user.role !== 'admin')) {
-        socket.emit('error', { message: 'Unauthorized' });
+        socket.emit('error', { message: 'Unauthorised' });
         return;
       }
 

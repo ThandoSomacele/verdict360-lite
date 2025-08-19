@@ -170,7 +170,17 @@ class ConversationFlowService {
     const userResponse = userMessage.toLowerCase().trim();
 
     // Check for positive responses
-    const positiveResponses = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'that would be great', 'connect me'];
+    const positiveResponses = [
+      'yes',
+      'yeah',
+      'yep',
+      'sure',
+      'ok',
+      'okay',
+      'please',
+      'that would be great',
+      'connect me',
+    ];
     const negativeResponses = ['no', 'nah', 'not now', 'maybe later', 'not interested', 'not yet'];
 
     const isPositive = positiveResponses.some(phrase => userResponse.includes(phrase));
@@ -178,10 +188,24 @@ class ConversationFlowService {
 
     // Check if user is asking a follow-up question or providing more information
     const questionIndicators = [
-      'what', 'how', 'when', 'where', 'why', 'can you', 'should i', 'do i', 'will i',
-      'i need', 'i want', 'i am', 'help me', 'tell me', 'explain', '?'
+      'what',
+      'how',
+      'when',
+      'where',
+      'why',
+      'can you',
+      'should i',
+      'do i',
+      'will i',
+      'i need',
+      'i want',
+      'i am',
+      'help me',
+      'tell me',
+      'explain',
+      '?',
     ];
-    
+
     const isAsking = questionIndicators.some(indicator => userResponse.includes(indicator));
 
     if (isPositive) {
@@ -215,25 +239,27 @@ class ConversationFlowService {
       };
 
       const response = await aiService.generateResponse(userMessage, context);
-      
+
       // Only add consultation offer if AI hasn't already included one
-      const hasConsultationOffer = response.content.toLowerCase().includes('consultation') || 
-                                 response.content.toLowerCase().includes('connect you') ||
-                                 response.content.toLowerCase().includes('attorney');
-      
+      const hasConsultationOffer =
+        response.content.toLowerCase().includes('consultation') ||
+        response.content.toLowerCase().includes('connect you') ||
+        response.content.toLowerCase().includes('attorney');
+
       if (!hasConsultationOffer) {
-        response.content += '\n\nWould you like me to connect you with one of our attorneys who can provide more detailed guidance specific to your situation?';
+        response.content +=
+          '\n\nWould you like me to connect you with one of our attorneys who can provide more detailed guidance specific to your situation?';
       }
-      
+
       response.metadata.shouldOfferConsultation = true;
       response.metadata.intent = 'information_with_consultation_offer';
-      
+
       return response;
     } else {
       // Unclear response, ask for clarification
       return {
         content:
-          "I want to make sure I understand correctly. Would you like me to arrange a consultation with one of our attorneys? Just let me know 'yes' or 'no' and I'll help you accordingly.",
+          "I want to make sure I understand correctly. Would you like me to arrange a consultation with one of our attorneys? I'll help you accordingly.",
         metadata: {
           intent: 'clarification',
           shouldOfferConsultation: true,
@@ -251,7 +277,7 @@ class ConversationFlowService {
     // First check if a lead has already been created for this conversation
     const db = getDatabase();
     const existingLead = await db('leads')
-      .whereRaw("metadata::text LIKE ?", [`%"conversationId":"${conversation.id}"%`])
+      .whereRaw('metadata::text LIKE ?', [`%"conversationId":"${conversation.id}"%`])
       .orWhere(function () {
         this.whereExists(function () {
           this.select('*')
@@ -278,14 +304,21 @@ class ConversationFlowService {
 
     // Check if user is asking a question instead of providing contact info
     const questionIndicators = [
-      'what', 'how', 'can', 'should', 'will', 'before that', 'wait',
-      'tell me', 'explain', 'help', '?'
+      'what',
+      'how',
+      'can',
+      'should',
+      'will',
+      'before that',
+      'wait',
+      'tell me',
+      'explain',
+      'help',
+      '?',
     ];
-    
-    const isAsking = questionIndicators.some(indicator => 
-      userMessage.toLowerCase().includes(indicator)
-    );
-    
+
+    const isAsking = questionIndicators.some(indicator => userMessage.toLowerCase().includes(indicator));
+
     // If user is asking a question, respond normally instead of collecting data
     if (isAsking && !userMessage.toLowerCase().includes('@')) {
       const context = {
@@ -293,13 +326,13 @@ class ConversationFlowService {
         conversationHistory: conversation.messages,
         userMessage,
       };
-      
+
       const response = await aiService.generateResponse(userMessage, context);
-      
+
       // After answering, remind about consultation setup
-      response.content += '\n\nWhen you\'re ready, I can still help set up that consultation with one of our attorneys.';
+      response.content += "\n\nWhen you're ready, I can still help set up that consultation with one of our attorneys.";
       response.metadata.shouldOfferConsultation = true;
-      
+
       return response;
     }
 
@@ -380,7 +413,7 @@ class ConversationFlowService {
   shouldOfferConsultation(userMessage, messageHistory) {
     const complexityIndicators = [
       'my case',
-      'my situation', 
+      'my situation',
       'what should i do',
       'need legal help',
       'been charged',
@@ -393,7 +426,7 @@ class ConversationFlowService {
       'sued',
       'injured in accident',
       'employment issue',
-      'contract dispute'
+      'contract dispute',
     ];
 
     const userLower = userMessage.toLowerCase();
