@@ -191,11 +191,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, tenant, theme = 'lig
           <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
             {formatTime(message.sentAt)}
           </span>
-          {message.metadata?.confidenceScore && (
-            <span className={`ml-2 text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
-              Confidence: {Math.round(message.metadata.confidenceScore * 100)}%
-            </span>
-          )}
         </div>
       </div>
     </div>
