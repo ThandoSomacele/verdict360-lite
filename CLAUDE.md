@@ -34,8 +34,9 @@ This is a multi-tenant SaaS platform for AI chatbots serving South African law f
 - **Individual Analytics**: Per-tenant dashboards and metrics
 
 ### Core Technology Stack
+- **Framework**: SvelteKit 2.0 for full-stack development
 - **Backend**: Express.js with PostgreSQL (Knex.js ORM) and Redis caching
-- **Frontend**: React (separate client app in src/client/)
+- **Frontend**: Svelte 5 with Tailwind CSS (migrated from React)
 - **AI Integration**: Ollama with Llama 3.1/3.2 models for South African legal assistance
 - **Real-time**: Socket.io for chat functionality
 - **Billing**: Stripe integration for subscription management
@@ -50,15 +51,21 @@ This is a multi-tenant SaaS platform for AI chatbots serving South African law f
 - **Validation**: Joi for request/response validation
 
 ### Application Structure
-- **src/server/**: Express.js backend with MVC pattern
-  - `controllers/`: Route handlers and request/response logic
-  - `middleware/`: Authentication, tenant resolution, rate limiting
-  - `models/`: Database models and business logic
-  - `services/`: Business services (AI, email, calendar, billing)
-  - `routes/`: API endpoint definitions
+- **src/sveltekit/**: SvelteKit application
+  - `routes/`: Page components and API endpoints
+    - `[tenant]/`: Dynamic tenant routes for multi-tenant support
+    - `admin/`: Admin dashboard pages
+    - `api/`: API endpoints for backend services
+  - `lib/`: Shared libraries and utilities
+    - `components/`: Reusable Svelte components
+    - `server/`: Server-side utilities and database connections
+    - `services/`: Business services (AI, email, calendar, billing)
+  - `hooks.server.ts`: Server hooks for authentication and tenant resolution
+  - `app.html`: Application HTML template
+  - `app.css`: Global styles with Tailwind CSS
+- **src/server/**: Legacy Express.js backend (being migrated)
   - `database/`: Knex migrations and seeds
-- **src/client/**: React frontend application
-- **src/shared/**: Common utilities and types shared between client/server
+  - `config/`: Database and service configurations
 
 ### Environment Configuration
 The application requires extensive environment configuration for:
@@ -73,8 +80,9 @@ The application requires extensive environment configuration for:
 1. Set up local PostgreSQL and Redis instances
 2. Copy `.env.example` to `.env` and configure
 3. Run `npm run db:migrate && npm run db:seed` for database setup
-4. Use `npm run dev` for concurrent client/server development
+4. Use `npm run dev` to start the SvelteKit development server on port 3000
 5. Always run `npm run lint && npm run typecheck` before commits
+6. Run `npm run check` to validate SvelteKit configuration
 
 ### Multi-Tenant Considerations
 When working with this codebase:
@@ -84,3 +92,60 @@ When working with this codebase:
 - Services (AI, email, calendar) must be tenant-aware
 - Analytics and metrics collection must segregate by tenant
 - dont add claude in commit messages
+
+## Visual Development
+
+## Design Principles
+- Comprehensive design checklist in `/context/design-principles.md`
+- Brand style guide in `/context/style-guide.md`
+- Design review agent configuration in `/context/design-review-agent.md`
+- When making visual (front-end, UI/UX) changes, always refer to these files for guidance
+
+### Quick Visual Check
+IMMEDIATELY after implementing any front-end change:
+1. **Identify what changed** - Review the modified components/pages
+2. **Navigate to affected pages** - Use `mcp_playwright_browser_navigate` to visit each changed view
+3. **Verify design compliance** - Compare against `/context/design-principles.md` and `/context/style-guide.md`
+4. **Validate feature implementation** - Ensure the change fulfills the user's specific request
+5. **Check acceptance criteria** - Review any provided context or requirements
+6. **Capture evidence** - Take full page screenshot at desktop viewport (1440px) of each changed view
+7. **Check for errors** - Run `mcp_playwright_browser_console_messages`
+
+This verification ensures changes meet design standards and user requirements.
+
+### Comprehensive Design Review
+Invoke the `@agent-design-review` subagent for thorough design validation when:
+- Completing significant UI/UX features
+- Before finalizing PRs with visual changes
+- Needing comprehensive accessibility and responsiveness testing
+
+### shadcn/ui Components
+- Modern component library built on Radix UI primitives
+- Tailwind CSS v4 with CSS variables for theming
+- Lucide icons throughout
+
+### Key Features
+
+- Dashboard for event management
+- Content moderation tools
+- Export functionality
+- Credits system
+- Multi-tenant architecture with organization support
+
+### Git Commit Guidelines
+
+- Please use Conventional Commits formatting for git commits.
+- Please use Conventional Branch naming (prefix-based branch naming convention)
+- Please do not mention yourself (Claude) as a co-author when committing, or include any links to Claude Code
+
+### Guidance Memories
+
+- Please ask for clarification upfront, upon the initial prompts, when you need more direction.
+
+### Linting and Code Quality
+
+- Please run `npm run lint` after completing large additions or refactors to ensure adherence to syntactic best practices
+
+### CLI Tooling Memories
+
+- Please use the `gh` CLI tool when appropriate, create issues, open pull requests, read comments, etc.

@@ -1,0 +1,22 @@
+{
+	"/": [],
+	"/admin": [],
+	"/api/admin/stats": [
+		"src/routes/api/admin/stats/+server.ts"
+	],
+	"/api/admin/tenants": [
+		"src/routes/api/admin/tenants/+server.ts"
+	],
+	"/api/ai/chat": [
+		"src/routes/api/ai/chat/+server.ts"
+	],
+	"/api/ai/welcome": [
+		"src/routes/api/ai/welcome/+server.ts"
+	],
+	"/api/health": [
+		"src/routes/api/health/+server.ts"
+	],
+	"/api/tenants/current": [
+		"src/routes/api/tenants/current/+server.ts"
+	]
+}

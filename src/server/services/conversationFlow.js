@@ -234,8 +234,7 @@ class ConversationFlowService {
 
     if (isPositive) {
       return {
-        content:
-          "Excellent! I'd be happy to set up a consultation for you. To connect you with the right attorney, I'll need to collect some basic contact information. Could you please provide your full name, email address, and phone number?",
+        content: "Excellent! I'd be happy to set up a consultation for you. Please fill in your contact details below so I can connect you with the right attorney.",
         metadata: {
           intent: 'data_collection',
           shouldOfferConsultation: false,
@@ -440,12 +439,12 @@ class ConversationFlowService {
         };
       }
     } else {
-      // Request missing information
+      // Request missing information via form
       const missingFields = this.getMissingContactFields(contactInfo);
       return {
         content: `I have some of your information, but I still need ${missingFields.join(
           ' and '
-        )}. Could you please provide the missing details?`,
+        )}. Please complete the form below with the missing details.`,
         metadata: {
           intent: 'incomplete_data',
           missingFields,

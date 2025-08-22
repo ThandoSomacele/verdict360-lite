@@ -510,6 +510,112 @@ router.post('/users', authenticateToken, requireRole(['admin']), async (req, res
 });
 
 /**
+ * Create new tenant
+ */
+router.post('/tenants', authenticateToken, requireRole(['admin']), async (req, res) => {
+  try {
+    const { 
+      name, 
+      subdomain, 
+      email, 
+      phone, 
+      address,
+      adminUser = {},
+      branding = {},
+      settings = {}
+    } = req.body;
+
+    if (!name || !subdomain || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, subdomain, and email are required'
+      });
+    }
+
+    const db = getDatabase();
+    const Tenant = require('../models/Tenant');
+    const { hashPassword } = require('../utils/auth');
+
+    // Create tenant
+    const tenantData = {
+      name,
+      subdomain,
+      email,
+      phone,
+      address,
+      branding: {
+        companyName: name,
+        primaryColor: '#1e40af',
+        secondaryColor: '#f3f4f6',
+        logoUrl: '',
+        welcomeMessage: `Welcome to ${name} AI Legal Assistant`,
+        ...branding
+      },
+      settings: {
+        businessHours: {
+          timezone: 'Africa/Johannesburg',
+          workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+          startTime: '09:00',
+          endTime: '17:00'
+        },
+        features: {
+          calendarIntegration: true,
+          emailNotifications: true,
+          smsNotifications: false
+        },
+        ...settings
+      }
+    };
+
+    const tenant = await Tenant.create(tenantData);
+
+    // Create admin user for the tenant if provided
+    let createdUser = null;
+    if (adminUser.email && adminUser.password) {
+      const hashedPassword = await hashPassword(adminUser.password);
+      
+      const [user] = await db('users').insert({
+        tenant_id: tenant.id,
+        email: adminUser.email,
+        password_hash: hashedPassword,
+        first_name: adminUser.firstName || 'Admin',
+        last_name: adminUser.lastName || 'User',
+        role: 'admin',
+        status: 'active'
+      }).returning(['id', 'email', 'first_name', 'last_name', 'role']);
+
+      createdUser = user;
+    }
+
+    logger.info(`Admin created new tenant: ${subdomain} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Tenant created successfully',
+      tenant: {
+        ...tenant,
+        branding: typeof tenant.branding === 'string' ? JSON.parse(tenant.branding) : tenant.branding,
+        settings: typeof tenant.settings === 'string' ? JSON.parse(tenant.settings) : tenant.settings
+      },
+      adminUser: createdUser
+    });
+  } catch (error) {
+    if (error.message === 'Subdomain already exists') {
+      return res.status(409).json({
+        success: false,
+        message: 'Subdomain already exists'
+      });
+    }
+
+    logger.error('Error creating tenant:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create tenant'
+    });
+  }
+});
+
+/**
  * Get platform configuration
  */
 router.get('/config', authenticateToken, requireRole(['admin']), async (req, res) => {
