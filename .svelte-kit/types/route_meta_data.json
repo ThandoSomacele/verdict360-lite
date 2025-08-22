@@ -18,5 +18,9 @@
 	],
 	"/api/tenants/current": [
 		"src/routes/api/tenants/current/+server.ts"
-	]
+	],
+	"/demo": [],
+	"/login": [],
+	"/pricing": [],
+	"/signup": []
 }
