@@ -1,6 +1,8 @@
 {
 	"/": [],
+	"/about": [],
 	"/admin": [],
+	"/admin/tenants": [],
 	"/api/admin/stats": [
 		"src/routes/api/admin/stats/+server.ts"
 	],
@@ -19,6 +21,8 @@
 	"/api/tenants/current": [
 		"src/routes/api/tenants/current/+server.ts"
 	],
+	"/contact": [],
+	"/dashboard": [],
 	"/demo": [],
 	"/login": [],
 	"/pricing": [],
