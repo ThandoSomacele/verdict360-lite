@@ -1,16 +1,9 @@
-exports.up = function(knex) {
+export const up = function(knex) {
   return knex.schema.table('users', function(table) {
     // Add admin role support and allow platform admins without tenant
     table.dropForeign('tenant_id'); // Remove the foreign key constraint
     table.foreign('tenant_id').references('id').inTable('tenants').onDelete('CASCADE').onUpdate('CASCADE');
-    table.index(['role']);
-    table.index(['is_active']);
-  })
-  .then(() => {
-    // Update role enum to include admin
-    return knex.raw(`
-      ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'admin';
-    `);
+    // Role index already exists from 20241201_002_create_users.js
   })
   .then(() => {
     // Allow tenant_id to be null for platform admins
@@ -20,7 +13,7 @@ exports.up = function(knex) {
   });
 };
 
-exports.down = function(knex) {
+export const down = function(knex) {
   return knex.schema.table('users', function(table) {
     table.uuid('tenant_id').notNullable().alter();
   });

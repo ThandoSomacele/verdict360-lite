@@ -1,4 +1,4 @@
-exports.up = function(knex) {
+export const up = function(knex) {
   return knex.schema.createTable('leads', function(table) {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('tenant_id').references('id').inTable('tenants').onDelete('CASCADE');
@@ -24,6 +24,6 @@ exports.up = function(knex) {
   });
 };
 
-exports.down = function(knex) {
+export const down = function(knex) {
   return knex.schema.dropTable('leads');
 };

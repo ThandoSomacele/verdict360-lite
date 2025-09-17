@@ -86,3 +86,6 @@ coverage/
 *.pem
 *.key
 !mock-data/*.key
+
+# Playwright
+.playwright-mcp/

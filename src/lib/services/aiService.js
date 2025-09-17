@@ -1,19 +1,4 @@
 import axios from 'axios';
-import type { ChatMessage, AIResponse } from '$lib/types';
-
-interface OllamaRequest {
-  model: string;
-  messages: Array<{
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-  }>;
-  stream: boolean;
-  options?: {
-    temperature?: number;
-    top_p?: number;
-    max_tokens?: number;
-  };
-}
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const DEFAULT_MODEL = process.env.AI_MODEL || 'llama3.2:latest';
@@ -30,31 +15,37 @@ Key guidelines:
 When you believe a consultation would be beneficial, respond with: "I'd recommend scheduling a consultation to discuss this matter in detail. Would you like me to help arrange that?"`;
 
 export class AIService {
-  private model: string;
-  private baseUrl: string;
-
   constructor() {
     this.model = DEFAULT_MODEL;
     this.baseUrl = OLLAMA_BASE_URL;
   }
 
-  async generateResponse(
-    message: string,
-    conversationHistory: ChatMessage[] = [],
-    tenantId: string = 'demo'
-  ): Promise<AIResponse> {
+  async generateWelcomeMessage(tenantId = 'demo') {
+    return {
+      response: "Good day! I'm your AI legal assistant, here to help with South African legal enquiries. How may I assist you today?",
+      metadata: {
+        intent: 'greeting',
+        shouldOfferConsultation: false,
+        isDataCollection: false,
+        tenantId,
+        timestamp: new Date().toISOString()
+      }
+    };
+  }
+
+  async generateResponse(message, conversationHistory = [], tenantId = 'demo') {
     try {
       // Build conversation context
       const messages = [
-        { role: 'system' as const, content: SYSTEM_PROMPT },
+        { role: 'system', content: SYSTEM_PROMPT },
         ...conversationHistory.slice(-10).map(msg => ({
-          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
         })),
-        { role: 'user' as const, content: message }
+        { role: 'user', content: message }
       ];
 
-      const request: OllamaRequest = {
+      const request = {
         model: this.model,
         messages,
         stream: false,
@@ -65,6 +56,9 @@ export class AIService {
         }
       };
 
+      console.log('Sending request to Ollama:', this.baseUrl + '/api/chat');
+      console.log('Using model:', this.model);
+      
       const response = await axios.post(`${this.baseUrl}/api/chat`, request);
       const aiResponse = response.data.message?.content || 'I apologize, but I encountered an error processing your request.';
 
@@ -80,7 +74,8 @@ export class AIService {
         }
       };
     } catch (error) {
-      console.error('AI Service Error:', error);
+      console.error('AI Service Error:', error.message);
+      console.error('Full error:', error);
       
       return {
         response: 'I apologize, but I\'m experiencing technical difficulties. Please try again in a moment.',
@@ -95,67 +90,46 @@ export class AIService {
     }
   }
 
-  private analyzeResponse(response: string, userMessage: string) {
+  analyzeResponse(response, userMessage) {
     const lowerResponse = response.toLowerCase();
     const lowerMessage = userMessage.toLowerCase();
-
-    // Check for consultation offer patterns
-    const consultationPatterns = [
-      'schedule a consultation',
-      'arrange that',
-      'speak with an attorney',
-      'consult with a lawyer',
-      'book a consultation'
-    ];
-
-    const shouldOfferConsultation = consultationPatterns.some(pattern => 
-      lowerResponse.includes(pattern)
-    );
-
-    // Check for data collection triggers
-    const dataCollectionTriggers = [
-      'contact details',
-      'personal information',
-      'schedule a consultation',
-      'arrange that',
-      'book a consultation'
-    ];
-
-    const isDataCollection = dataCollectionTriggers.some(trigger => 
-      lowerResponse.includes(trigger)
-    );
-
-    // Determine intent based on user message and AI response
-    let intent = 'general_inquiry';
     
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('good')) {
+    // Check if response suggests consultation
+    const consultationKeywords = [
+      'consultation',
+      'schedule',
+      'attorney',
+      'lawyer',
+      'legal advice',
+      'would you like me to help arrange'
+    ];
+    
+    const shouldOfferConsultation = consultationKeywords.some(keyword => 
+      lowerResponse.includes(keyword)
+    );
+    
+    // Check if it's a data collection step
+    const isDataCollection = lowerResponse.includes('contact information') ||
+                           lowerResponse.includes('email') ||
+                           lowerResponse.includes('phone number');
+    
+    // Determine intent
+    let intent = 'general_query';
+    
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
       intent = 'greeting';
+    } else if (lowerMessage.includes('thank') || lowerMessage.includes('bye')) {
+      intent = 'closing';
     } else if (shouldOfferConsultation) {
       intent = 'consultation_offer';
     } else if (isDataCollection) {
       intent = 'data_collection';
-    } else if (lowerMessage.includes('legal') || lowerMessage.includes('law') || lowerMessage.includes('attorney')) {
-      intent = 'legal_inquiry';
     }
-
+    
     return {
       intent,
       shouldOfferConsultation,
-      isDataCollection,
-      suggestedActions: isDataCollection ? ['collect_contact_info'] : []
-    };
-  }
-
-  async generateWelcomeMessage(tenantId: string = 'demo'): Promise<AIResponse> {
-    return {
-      response: "Good day! I'm your AI legal assistant, here to help with South African legal enquiries. How may I assist you today?",
-      metadata: {
-        intent: 'greeting',
-        shouldOfferConsultation: false,
-        isDataCollection: false,
-        tenantId,
-        timestamp: new Date().toISOString()
-      }
+      isDataCollection
     };
   }
 }

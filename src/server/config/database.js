@@ -1,7 +1,13 @@
-const path = require('path');
-require('dotenv').config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-module.exports = {
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
   development: {
     client: 'postgresql',
     connection: {

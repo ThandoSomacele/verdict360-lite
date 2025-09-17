@@ -1,4 +1,4 @@
-exports.seed = async function (knex) {
+export const seed = async function (knex) {
   // Deletes ALL existing entries
   await knex('messages').del();
 
