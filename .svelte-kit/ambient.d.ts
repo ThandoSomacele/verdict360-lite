@@ -70,6 +70,7 @@ declare module '$env/static/private' {
 	export const SENTRY_DSN: string;
 	export const npm_package_engines_npm: string;
 	export const NVM_INC: string;
+	export const NoDefaultCurrentDirectoryInExePath: string;
 	export const CLAUDE_CODE_ENTRYPOINT: string;
 	export const TERM_PROGRAM: string;
 	export const NODE: string;
@@ -80,6 +81,7 @@ declare module '$env/static/private' {
 	export const HOMEBREW_REPOSITORY: string;
 	export const TMPDIR: string;
 	export const npm_config_global_prefix: string;
+	export const VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 	export const TERM_PROGRAM_VERSION: string;
 	export const ZDOTDIR: string;
 	export const ORIGINAL_XDG_CURRENT_DESKTOP: string;
@@ -218,6 +220,7 @@ declare module '$env/dynamic/private' {
 		SENTRY_DSN: string;
 		npm_package_engines_npm: string;
 		NVM_INC: string;
+		NoDefaultCurrentDirectoryInExePath: string;
 		CLAUDE_CODE_ENTRYPOINT: string;
 		TERM_PROGRAM: string;
 		NODE: string;
@@ -228,6 +231,7 @@ declare module '$env/dynamic/private' {
 		HOMEBREW_REPOSITORY: string;
 		TMPDIR: string;
 		npm_config_global_prefix: string;
+		VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 		TERM_PROGRAM_VERSION: string;
 		ZDOTDIR: string;
 		ORIGINAL_XDG_CURRENT_DESKTOP: string;

@@ -15,6 +15,15 @@
 	"/api/ai/welcome": [
 		"src/routes/api/ai/welcome/+server.ts"
 	],
+	"/api/auth/login": [
+		"src/routes/api/auth/login/+server.ts"
+	],
+	"/api/auth/logout": [
+		"src/routes/api/auth/logout/+server.ts"
+	],
+	"/api/auth/signup": [
+		"src/routes/api/auth/signup/+server.ts"
+	],
 	"/api/health": [
 		"src/routes/api/health/+server.ts"
 	],

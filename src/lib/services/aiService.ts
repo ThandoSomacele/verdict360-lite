@@ -18,16 +18,27 @@ interface OllamaRequest {
 const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const DEFAULT_MODEL = process.env.AI_MODEL || 'llama3.2:latest';
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant specializing in South African law. You provide accurate, informative responses about legal matters in South Africa. When clients ask about specific legal issues, provide general guidance but always recommend consulting with a qualified attorney for personalized advice.
+const SYSTEM_PROMPT = `You are a helpful AI assistant specializing in South African law. You provide accurate, informative responses about legal matters in South Africa.
 
 Key guidelines:
 1. Focus on South African law and regulations
-2. Provide clear, accessible explanations
-3. Always recommend professional legal consultation for specific cases
-4. Be empathetic and professional
-5. If you detect the client needs consultation, offer to connect them with an attorney
+2. Provide clear, CONCISE explanations - avoid lengthy responses unless necessary
+3. Be consistent - never offer something you cannot provide
+4. For complex legal documents (wills, contracts, agreements):
+   - NEVER offer to provide templates or drafts
+   - Explain key requirements and considerations
+   - Always direct to a qualified attorney for document preparation
+5. Always recommend professional legal consultation for specific cases
+6. Be empathetic and professional
+7. Format responses in plain text only - no markdown, no special formatting
+8. Keep responses focused and to the point
 
-When you believe a consultation would be beneficial, respond with: "I'd recommend scheduling a consultation to discuss this matter in detail. Would you like me to help arrange that?"`;
+Important rules:
+- For wills specifically: Explain the requirements but NEVER offer templates. State clearly: "For will preparation, you need a qualified attorney to ensure validity and proper execution."
+- When unsure: "I can provide general information about [topic], but for your specific situation, consulting with an attorney would be best."
+- Avoid over-explaining or justifying previous responses
+
+When consultation is beneficial, say: "I'd recommend scheduling a consultation to discuss this matter in detail. Would you like me to help arrange that?"`;
 
 export class AIService {
   private model: string;
@@ -61,12 +72,15 @@ export class AIService {
         options: {
           temperature: 0.7,
           top_p: 0.9,
-          max_tokens: 1000
+          max_tokens: 500  // Reduced to encourage more concise responses
         }
       };
 
       const response = await axios.post(`${this.baseUrl}/api/chat`, request);
-      const aiResponse = response.data.message?.content || 'I apologize, but I encountered an error processing your request.';
+      let aiResponse = response.data.message?.content || 'I apologize, but I encountered an error processing your request.';
+
+      // Strip any markdown formatting that might still come through
+      aiResponse = this.stripMarkdown(aiResponse);
 
       // Analyze response for intent and metadata
       const metadata = this.analyzeResponse(aiResponse, message);
@@ -93,6 +107,37 @@ export class AIService {
         }
       };
     }
+  }
+
+  private stripMarkdown(text: string): string {
+    // Remove bold markers
+    text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    text = text.replace(/__(.*?)__/g, '$1');
+
+    // Remove italic markers
+    text = text.replace(/\*(.*?)\*/g, '$1');
+    text = text.replace(/_(.*?)_/g, '$1');
+
+    // Remove code blocks
+    text = text.replace(/```[\s\S]*?```/g, '');
+    text = text.replace(/`([^`]+)`/g, '$1');
+
+    // Remove headers
+    text = text.replace(/^#{1,6}\s+/gm, '');
+
+    // Remove links but keep the text
+    text = text.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+
+    // Remove horizontal rules
+    text = text.replace(/^[-*_]{3,}$/gm, '');
+
+    // Remove blockquotes
+    text = text.replace(/^>\s+/gm, '');
+
+    // Clean up excessive whitespace
+    text = text.replace(/\n{3,}/g, '\n\n');
+
+    return text.trim();
   }
 
   private analyzeResponse(response: string, userMessage: string) {
@@ -148,7 +193,7 @@ export class AIService {
 
   async generateWelcomeMessage(tenantId: string = 'demo'): Promise<AIResponse> {
     return {
-      response: "Good day! I'm your AI legal assistant, here to help with South African legal enquiries. How may I assist you today?",
+      response: "Hello! I'm your AI legal assistant for South African law. How can I help you today?",
       metadata: {
         intent: 'greeting',
         shouldOfferConsultation: false,
