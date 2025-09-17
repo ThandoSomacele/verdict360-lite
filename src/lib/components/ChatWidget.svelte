@@ -32,10 +32,19 @@
   let socket = $state<any>();
   let mounted = $state(false);
   let messagesContainer = $state<HTMLElement>();
+  let isButtonAnimating = $state(false);
+  let hasPlayedSound = $state(false);
   
   onMount(async () => {
     mounted = true;
     await initializeSocket();
+    
+    // Play notification sound after a delay to draw attention
+    setTimeout(() => {
+      playNotificationSound();
+      // Also add a subtle animation to the chat button
+      animateChatButton();
+    }, 3000); // Wait 3 seconds after page load
   });
   
   onDestroy(() => {
@@ -85,7 +94,8 @@
         id: `welcome_${Date.now()}`,
         content: welcome.response,
         sender: 'ai',
-        timestamp: new Date(),
+        senderType: 'bot',
+        sentAt: new Date().toISOString(),
         tenantId,
         metadata: welcome.metadata
       };
@@ -152,7 +162,8 @@
       id: `user_${Date.now()}`,
       content: content.trim(),
       sender: 'user',
-      timestamp: new Date(),
+      senderType: 'visitor',
+      sentAt: new Date().toISOString(),
       tenantId
     };
     
@@ -194,6 +205,41 @@
     }
   }
   
+  function playNotificationSound() {
+    if (hasPlayedSound || isOpen) return; // Don't play if already played or chat is open
+    
+    try {
+      // Create a simple beep sound using Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800; // Frequency in Hz
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+      
+      hasPlayedSound = true;
+    } catch (error) {
+      console.log('Could not play notification sound:', error);
+    }
+  }
+  
+  function animateChatButton() {
+    if (isOpen) return;
+    isButtonAnimating = true;
+    setTimeout(() => {
+      isButtonAnimating = false;
+    }, 2000);
+  }
+
   let positionClass = $derived(position === 'bottom-left' ? 'bottom-4 left-4' : 'bottom-4 right-4');
 </script>
 
@@ -203,7 +249,8 @@
     <button
       onclick={toggleChat}
       class="w-16 h-16 rounded-full shadow-lg flex items-center justify-center
-             transition-all duration-300 hover:scale-110 text-white hover:shadow-xl"
+             transition-all duration-300 hover:scale-110 text-white hover:shadow-xl
+             {isButtonAnimating ? 'attention-grabbing' : ''}"
       class:bg-blue-600={!tenant?.branding?.primaryColor}
       style={tenant?.branding?.primaryColor ? `background-color: ${tenant.branding.primaryColor}` : ''}
       aria-label="Open chat"
@@ -332,3 +379,20 @@
     </div>
   {/if}
 </div>
+
+<style>
+  @keyframes attention-pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+      transform: scale(1.1);
+      box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+    }
+  }
+  
+  :global(.attention-grabbing) {
+    animation: attention-pulse 2s ease-in-out infinite;
+  }
+</style>
