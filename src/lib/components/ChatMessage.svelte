@@ -65,21 +65,8 @@
            class:bg-gray-100={theme === 'light'}
            class:text-gray-900={theme === 'light'}>
         <p class="text-sm whitespace-pre-wrap">{message.content}</p>
-        
-        <!-- Contact form would go here if metadata.isDataCollection -->
-        {#if message.metadata?.isDataCollection}
-          <div class="mt-3 p-3 bg-white rounded-md border">
-            <h4 class="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
-            <div class="space-y-2">
-              <input type="text" placeholder="Full Name" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <input type="email" placeholder="Email Address" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <input type="tel" placeholder="Phone Number" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <button type="submit" class="w-full px-3 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
-                Submit Information
-              </button>
-            </div>
-          </div>
-        {/if}
+
+        <!-- Contact form is handled by the main ContactForm component in ChatWidget -->
       </div>
       
       <div class="flex items-center mt-1">
