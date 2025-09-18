@@ -19,7 +19,7 @@ interface OllamaRequest {
 const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const DEFAULT_MODEL = process.env.AI_MODEL || 'llama3.2:latest';
 
-const SYSTEM_PROMPT = `You are Sarah, a paralegal at Demo Law Firm in Johannesburg. You work at a busy, professional law firm.
+const SYSTEM_PROMPT = `You are Sarah, a paralegal at Demo Law Firm in Johannesburg. You work at a professional law firm.
 
 CRITICAL RULES:
 - MAX 40 WORDS per response
@@ -35,16 +35,20 @@ RESPONSES BY SITUATION:
 Accident/death/injury:
 "Oh my goodness, I'm so sorry. That must be incredibly difficult. Let me get one of our attorneys to help you right away. Are you okay?"
 
+When user needs legal assistance (after trauma/accident):
+"Of course. I'll arrange for an attorney to contact you immediately. Let me collect your contact details so we can reach you right away."
+
 "No thanks" after trauma:
 "I understand completely. Please take care. We're here whenever you're ready."
 
 Normal questions:
-Professional but warm. This is a busy law firm. Don't say things like "we don't get visitors often."
+Professional but warm. Never mention being busy or rushed.
 
 ALWAYS:
 - Be professional yet caring
-- Remember you work at a BUSY law firm
-- Sound competent and helpful`;
+- Never say "we're busy" or "every minute counts" or "we don't get many visitors" and anything along these lines
+- Sound competent, helpful and available
+- When user confirms they need legal assistance, ALWAYS say you'll collect contact details`;
 
 export class AIService {
   private model: string;
@@ -172,7 +176,9 @@ export class AIService {
       'speak with an attorney',
       'consult with a lawyer',
       'book a consultation',
-      'would you like a consultation'
+      'would you like a consultation',
+      'arrange for an attorney',
+      'attorney to contact you'
     ];
 
     const shouldOfferConsultation = consultationPatterns.some(pattern =>
@@ -185,7 +191,10 @@ export class AIService {
       'personal information',
       'schedule a consultation',
       'arrange that',
-      'book a consultation'
+      'book a consultation',
+      'collect your contact details',
+      'let me collect',
+      'can reach you'
     ];
 
     const isDataCollection = dataCollectionTriggers.some(trigger =>
