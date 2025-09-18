@@ -282,6 +282,17 @@
     }, 2000);
   }
 
+  function getConversationSummary(): string {
+    // Get last few user messages to create a summary of what the user is asking about
+    const userMessages = messages
+      .filter(m => m.sender === 'user')
+      .slice(-3) // Get last 3 user messages
+      .map(m => m.content)
+      .join(' ');
+
+    return userMessages || '';
+  }
+
   let positionClass = $derived(position === 'bottom-left' ? 'bottom-4 left-4' : 'bottom-4 right-4');
 </script>
 
@@ -347,6 +358,7 @@
           <ContactForm
             onSubmit={submitContactForm}
             onClose={() => showContactForm = false}
+            initialEnquiry={getConversationSummary()}
           />
         {/if}
 

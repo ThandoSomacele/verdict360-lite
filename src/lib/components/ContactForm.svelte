@@ -2,6 +2,7 @@
   interface Props {
     onSubmit: (data: ContactFormData) => void;
     onClose: () => void;
+    initialEnquiry?: string;
   }
 
   export interface ContactFormData {
@@ -9,16 +10,18 @@
     email: string;
     phone: string;
     preferredContact: 'email' | 'phone';
+    enquiryDetails: string;
     message?: string;
   }
 
-  let { onSubmit, onClose }: Props = $props();
+  let { onSubmit, onClose, initialEnquiry = '' }: Props = $props();
 
   let formData = $state<ContactFormData>({
     name: '',
     email: '',
     phone: '',
     preferredContact: 'email',
+    enquiryDetails: initialEnquiry,
     message: ''
   });
 
@@ -44,6 +47,10 @@
       errors.phone = 'Please enter a valid South African phone number';
     }
 
+    if (!formData.enquiryDetails.trim()) {
+      errors.enquiryDetails = 'Please describe your legal matter';
+    }
+
     return Object.keys(errors).length === 0;
   }
 
@@ -64,6 +71,7 @@
         email: '',
         phone: '',
         preferredContact: 'email',
+        enquiryDetails: '',
         message: ''
       };
     } catch (error) {
@@ -138,6 +146,22 @@
       />
       {#if errors.phone}
         <p class="text-red-500 text-xs mt-1">{errors.phone}</p>
+      {/if}
+    </div>
+
+    <div>
+      <label for="enquiryDetails" class="block text-sm font-medium text-gray-700 mb-1">
+        Legal Matter Details *
+      </label>
+      <textarea
+        id="enquiryDetails"
+        bind:value={formData.enquiryDetails}
+        rows="4"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        placeholder="Please describe your legal matter (e.g., accident details, what happened, when it occurred, injuries sustained, etc.)"
+      ></textarea>
+      {#if errors.enquiryDetails}
+        <p class="text-red-500 text-xs mt-1">{errors.enquiryDetails}</p>
       {/if}
     </div>
 
