@@ -35,6 +35,7 @@
   let messagesContainer = $state<HTMLElement>();
   let isButtonAnimating = $state(false);
   let hasPlayedSound = $state(false);
+  let typingStartTime = $state<number>(0);
   
   onMount(async () => {
     mounted = true;
@@ -120,14 +121,17 @@
   }
   
   function handleAIResponse(message: ChatMessageType) {
-    // Show typing indicator first
-    isTyping = true;
-    typingUser = 'Legal Assistant';
-    scrollToBottom();
+    // Typing indicator was shown immediately when user sent message
+    // Calculate dynamic typing delay based on message length for natural feel
+    const wordCount = message.content.split(' ').length;
+    // 1.5 seconds minimum + 50ms per word, max 4 seconds
+    const minimumTypingDelay = Math.min(1500 + (wordCount * 50), 4000);
 
-    // Simulate realistic typing delay (1-3 seconds)
-    const typingDelay = Math.min(1000 + (message.content.length * 5), 3000);
+    const currentTime = Date.now();
+    const elapsedTime = currentTime - typingStartTime;
+    const remainingDelay = Math.max(0, minimumTypingDelay - elapsedTime);
 
+    // Wait for the natural typing duration before showing response
     setTimeout(() => {
       // Stop typing indicator and add the complete message
       isTyping = false;
@@ -142,7 +146,7 @@
           message.metadata?.shouldOfferConsultation) {
         showContactForm = true;
       }
-    }, typingDelay);
+    }, remainingDelay);
   }
 
   // Removed typeMessage function as we're no longer using character-by-character animation
@@ -172,7 +176,7 @@
   
   async function sendMessage(content: string) {
     if (!socket || !content.trim()) return;
-    
+
     // Add user message immediately
     const userMessage: ChatMessageType = {
       id: `user_${Date.now()}`,
@@ -182,24 +186,32 @@
       sentAt: new Date().toISOString(),
       tenantId
     };
-    
+
     messages = [...messages, userMessage];
     scrollToBottom();
-    
-    // Send typing indicator
+
+    // Show typing indicator after 3-second delay
+    setTimeout(() => {
+      isTyping = true;
+      typingUser = 'Sarah';
+      typingStartTime = Date.now(); // Track when typing started
+      scrollToBottom();
+    }, 3000);
+
+    // Send typing indicator to other clients
     socket.emit('typing', { isTyping: true, tenantId });
-    
+
     // Get conversation history
     let conversationHistory: ChatMessageType[] = messages.slice(-10); // Keep last 10 messages
-    
+
     // Send message via socket
     socket.emit('chat-message', {
       message: content.trim(),
       conversationHistory,
       tenantId
     });
-    
-    // Stop typing indicator
+
+    // Stop typing indicator after sending
     setTimeout(() => {
       socket.emit('typing', { isTyping: false, tenantId });
     }, 1000);

@@ -19,37 +19,32 @@ interface OllamaRequest {
 const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const DEFAULT_MODEL = process.env.AI_MODEL || 'llama3.2:latest';
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant specializing in South African law. You provide accurate, informative responses about legal matters in South Africa.
+const SYSTEM_PROMPT = `You are Sarah, a paralegal at Demo Law Firm in Johannesburg. You work at a busy, professional law firm.
 
-CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE:
-- Use ONLY plain text - absolutely no asterisks, no markdown, no formatting
-- Write numbers as "1." not "1.**" or "**1.**"
-- Never use ** for bold or * for italics
-- Keep responses under 150 words maximum
-- Use simple numbered lists: "1. First point" not "1. **First point**"
+CRITICAL RULES:
+- MAX 40 WORDS per response
+- NO formatting/markdown
+- British spelling
+- Natural, professional conversation
 
-LANGUAGE REQUIREMENTS:
-- Use British/South African English spelling ONLY (NOT American)
-- Examples: colour (not color), organisation (not organization), labour (not labor)
-- Use "realise" not "realize", "centre" not "center", "defence" not "defense"
-- Use "programme" not "program", "cheque" not "check", "licence" (noun) not "license"
+RESPONSES BY SITUATION:
 
-Key guidelines:
-1. Focus on South African law and regulations
-2. Give SHORT, DIRECT answers - maximum 3-4 key points
-3. Be consistent - never offer something you cannot provide
-4. For complex legal documents (wills, contracts, agreements):
-   - NEVER offer templates or drafts
-   - State: "For [document type], you need a qualified attorney"
-5. Always recommend professional consultation for specific cases
-6. Be empathetic and professional
+"Hi/Hello" alone:
+"Hi there! What brings you in today? Are you looking for legal advice on a specific matter?"
 
-Important rules:
-- For wills: Say "For will preparation, you need a qualified attorney to ensure validity."
-- Keep answers brief and practical
-- No lengthy explanations
+Accident/death/injury:
+"Oh my goodness, I'm so sorry. That must be incredibly difficult. Let me get one of our attorneys to help you right away. Are you okay?"
 
-When consultation needed: "I recommend consulting with an attorney for your specific situation. Would you like help arranging that?"`;
+"No thanks" after trauma:
+"I understand completely. Please take care. We're here whenever you're ready."
+
+Normal questions:
+Professional but warm. This is a busy law firm. Don't say things like "we don't get visitors often."
+
+ALWAYS:
+- Be professional yet caring
+- Remember you work at a BUSY law firm
+- Sound competent and helpful`;
 
 export class AIService {
   private model: string;
@@ -83,7 +78,7 @@ export class AIService {
         options: {
           temperature: 0.7,
           top_p: 0.9,
-          max_tokens: 200  // Further reduced to enforce brevity
+          max_tokens: 100  // Strict limit for very short responses
         }
       };
 
@@ -150,16 +145,37 @@ export class AIService {
     const lowerResponse = response.toLowerCase();
     const lowerMessage = userMessage.toLowerCase();
 
+    // Check if user is ending conversation
+    const endingPhrases = [
+      'no thanks', 'no thank you', 'nothing thanks', 'nothing else',
+      'goodbye', 'bye', 'that\'s all', 'i\'m done', 'no nothing',
+      'all good', 'that is all', 'thanks bye'
+    ];
+
+    const isEndingConversation = endingPhrases.some(phrase =>
+      lowerMessage.includes(phrase)
+    );
+
+    if (isEndingConversation) {
+      return {
+        intent: 'conversation_end',
+        shouldOfferConsultation: false,
+        isDataCollection: false,
+        suggestedActions: []
+      };
+    }
+
     // Check for consultation offer patterns
     const consultationPatterns = [
       'schedule a consultation',
       'arrange that',
       'speak with an attorney',
       'consult with a lawyer',
-      'book a consultation'
+      'book a consultation',
+      'would you like a consultation'
     ];
 
-    const shouldOfferConsultation = consultationPatterns.some(pattern => 
+    const shouldOfferConsultation = consultationPatterns.some(pattern =>
       lowerResponse.includes(pattern)
     );
 
@@ -172,13 +188,13 @@ export class AIService {
       'book a consultation'
     ];
 
-    const isDataCollection = dataCollectionTriggers.some(trigger => 
+    const isDataCollection = dataCollectionTriggers.some(trigger =>
       lowerResponse.includes(trigger)
     );
 
     // Determine intent based on user message and AI response
     let intent = 'general_inquiry';
-    
+
     if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('good')) {
       intent = 'greeting';
     } else if (shouldOfferConsultation) {
@@ -199,7 +215,7 @@ export class AIService {
 
   async generateWelcomeMessage(tenantId: string = 'demo'): Promise<AIResponse> {
     return {
-      response: "Hello! I specialise in South African legal enquiries. How can I help you today?",
+      response: "Hi! I'm Sarah from the legal team here at Demo Law Firm. How can I help you today?",
       metadata: {
         intent: 'greeting',
         shouldOfferConsultation: false,
