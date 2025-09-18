@@ -3,6 +3,7 @@
   import ChatMessage from './ChatMessage.svelte';
   import MessageInput from './MessageInput.svelte';
   import TypingIndicator from './TypingIndicator.svelte';
+  import ContactForm from './ContactForm.svelte';
   import type { ChatMessage as ChatMessageType } from '$lib/types';
   
   // Props using Svelte 5 $props()
@@ -119,17 +120,32 @@
   }
   
   function handleAIResponse(message: ChatMessageType) {
-    messages = [...messages, message];
-    isTyping = false;
-    typingUser = null;
-    
-    // Check if AI response should show contact form
-    if (message.metadata?.isDataCollection) {
-      showContactForm = true;
-    }
-    
+    // Show typing indicator first
+    isTyping = true;
+    typingUser = 'Legal Assistant';
     scrollToBottom();
+
+    // Simulate realistic typing delay (1-3 seconds)
+    const typingDelay = Math.min(1000 + (message.content.length * 5), 3000);
+
+    setTimeout(() => {
+      // Stop typing indicator and add the complete message
+      isTyping = false;
+      typingUser = null;
+
+      // Add the complete message instantly
+      messages = [...messages, message];
+      scrollToBottom();
+
+      // Check if AI response should show contact form
+      if (message.metadata?.isDataCollection ||
+          message.metadata?.shouldOfferConsultation) {
+        showContactForm = true;
+      }
+    }, typingDelay);
   }
+
+  // Removed typeMessage function as we're no longer using character-by-character animation
   
   function handleTyping(data: { isTyping: boolean; sender: string }) {
     if (data.sender === 'ai') {
@@ -189,13 +205,27 @@
     }, 1000);
   }
 
-  function submitContactForm(contactInfo: any) {
+  async function submitContactForm(contactInfo: any) {
     if (!socket) return;
-    
+
     socket.emit('submit-contact', {
       contactInfo,
       tenantId
     });
+
+    // Add a success message to the chat
+    const confirmationMessage: ChatMessageType = {
+      id: `confirmation_${Date.now()}`,
+      content: 'Thank you for your information. An attorney will contact you shortly.',
+      sender: 'ai',
+      senderType: 'bot',
+      sentAt: new Date().toISOString(),
+      tenantId
+    };
+
+    messages = [...messages, confirmationMessage];
+    showContactForm = false;
+    scrollToBottom();
   }
   
   function toggleChat() {
@@ -302,66 +332,10 @@
 
         <!-- Contact Form -->
         {#if showContactForm}
-          <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 max-w-xs ml-auto mr-2">
-            <h4 class="font-medium text-gray-900 mb-3">Contact Information</h4>
-            <form onsubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const contactInfo = {
-                name: formData.get('name'),
-                email: formData.get('email'),
-                phone: formData.get('phone'),
-                company: formData.get('company') || '',
-                message: formData.get('message') || ''
-              };
-              submitContactForm(contactInfo);
-            }}>
-              <div class="space-y-3">
-                <input
-                  name="name"
-                  type="text"
-                  placeholder="Full Name *"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="Email Address *"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder="Phone Number *"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <input
-                  name="company"
-                  type="text"
-                  placeholder="Company (optional)"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <div class="flex space-x-2 pt-2">
-                  <button
-                    type="submit"
-                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors"
-                  >
-                    Submit
-                  </button>
-                  <button
-                    type="button"
-                    onclick={() => showContactForm = false}
-                    class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
+          <ContactForm
+            onSubmit={submitContactForm}
+            onClose={() => showContactForm = false}
+          />
         {/if}
 
         {#if isTyping && typingUser}

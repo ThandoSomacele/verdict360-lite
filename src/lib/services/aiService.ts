@@ -1,4 +1,5 @@
 import axios from 'axios';
+import removeMd from 'remove-markdown';
 import type { ChatMessage, AIResponse } from '$lib/types';
 
 interface OllamaRequest {
@@ -20,25 +21,35 @@ const DEFAULT_MODEL = process.env.AI_MODEL || 'llama3.2:latest';
 
 const SYSTEM_PROMPT = `You are a helpful AI assistant specializing in South African law. You provide accurate, informative responses about legal matters in South Africa.
 
+CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE:
+- Use ONLY plain text - absolutely no asterisks, no markdown, no formatting
+- Write numbers as "1." not "1.**" or "**1.**"
+- Never use ** for bold or * for italics
+- Keep responses under 150 words maximum
+- Use simple numbered lists: "1. First point" not "1. **First point**"
+
+LANGUAGE REQUIREMENTS:
+- Use British/South African English spelling ONLY (NOT American)
+- Examples: colour (not color), organisation (not organization), labour (not labor)
+- Use "realise" not "realize", "centre" not "center", "defence" not "defense"
+- Use "programme" not "program", "cheque" not "check", "licence" (noun) not "license"
+
 Key guidelines:
 1. Focus on South African law and regulations
-2. Provide clear, CONCISE explanations - avoid lengthy responses unless necessary
+2. Give SHORT, DIRECT answers - maximum 3-4 key points
 3. Be consistent - never offer something you cannot provide
 4. For complex legal documents (wills, contracts, agreements):
-   - NEVER offer to provide templates or drafts
-   - Explain key requirements and considerations
-   - Always direct to a qualified attorney for document preparation
-5. Always recommend professional legal consultation for specific cases
+   - NEVER offer templates or drafts
+   - State: "For [document type], you need a qualified attorney"
+5. Always recommend professional consultation for specific cases
 6. Be empathetic and professional
-7. Format responses in plain text only - no markdown, no special formatting
-8. Keep responses focused and to the point
 
 Important rules:
-- For wills specifically: Explain the requirements but NEVER offer templates. State clearly: "For will preparation, you need a qualified attorney to ensure validity and proper execution."
-- When unsure: "I can provide general information about [topic], but for your specific situation, consulting with an attorney would be best."
-- Avoid over-explaining or justifying previous responses
+- For wills: Say "For will preparation, you need a qualified attorney to ensure validity."
+- Keep answers brief and practical
+- No lengthy explanations
 
-When consultation is beneficial, say: "I'd recommend scheduling a consultation to discuss this matter in detail. Would you like me to help arrange that?"`;
+When consultation needed: "I recommend consulting with an attorney for your specific situation. Would you like help arranging that?"`;
 
 export class AIService {
   private model: string;
@@ -72,7 +83,7 @@ export class AIService {
         options: {
           temperature: 0.7,
           top_p: 0.9,
-          max_tokens: 500  // Reduced to encourage more concise responses
+          max_tokens: 200  // Further reduced to enforce brevity
         }
       };
 
@@ -110,34 +121,29 @@ export class AIService {
   }
 
   private stripMarkdown(text: string): string {
-    // Remove bold markers
-    text = text.replace(/\*\*(.*?)\*\*/g, '$1');
-    text = text.replace(/__(.*?)__/g, '$1');
+    // Use the remove-markdown library for thorough markdown removal
+    let cleanText = removeMd(text, {
+      stripListLeaders: false, // Keep numbered list formatting
+      gfm: true, // GitHub flavored markdown
+      useImgAltText: false // Don't include image alt text
+    });
 
-    // Remove italic markers
-    text = text.replace(/\*(.*?)\*/g, '$1');
-    text = text.replace(/_(.*?)_/g, '$1');
+    // Additional aggressive cleanup for any remaining patterns
+    cleanText = cleanText.replace(/\*+/g, '');
+    cleanText = cleanText.replace(/_+/g, '');
+    cleanText = cleanText.replace(/`+/g, '');
+    cleanText = cleanText.replace(/~+/g, '');
+    cleanText = cleanText.replace(/\|/g, '');
 
-    // Remove code blocks
-    text = text.replace(/```[\s\S]*?```/g, '');
-    text = text.replace(/`([^`]+)`/g, '$1');
+    // Ensure numbered lists are clean
+    cleanText = cleanText.replace(/(\d+)\.\s*\*\*(.*?)\*\*/g, '$1. $2');
+    cleanText = cleanText.replace(/(\d+)\.\s*\*(.*?)\*/g, '$1. $2');
 
-    // Remove headers
-    text = text.replace(/^#{1,6}\s+/gm, '');
+    // Clean up whitespace
+    cleanText = cleanText.replace(/  +/g, ' ');
+    cleanText = cleanText.replace(/\n{3,}/g, '\n\n');
 
-    // Remove links but keep the text
-    text = text.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-
-    // Remove horizontal rules
-    text = text.replace(/^[-*_]{3,}$/gm, '');
-
-    // Remove blockquotes
-    text = text.replace(/^>\s+/gm, '');
-
-    // Clean up excessive whitespace
-    text = text.replace(/\n{3,}/g, '\n\n');
-
-    return text.trim();
+    return cleanText.trim();
   }
 
   private analyzeResponse(response: string, userMessage: string) {
@@ -193,7 +199,7 @@ export class AIService {
 
   async generateWelcomeMessage(tenantId: string = 'demo'): Promise<AIResponse> {
     return {
-      response: "Hello! I'm your AI legal assistant for South African law. How can I help you today?",
+      response: "Hello! I specialise in South African legal enquiries. How can I help you today?",
       metadata: {
         intent: 'greeting',
         shouldOfferConsultation: false,
