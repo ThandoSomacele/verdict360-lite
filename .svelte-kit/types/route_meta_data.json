@@ -1,8 +1,17 @@
 {
 	"/": [],
 	"/about": [],
-	"/admin": [],
-	"/admin/tenants": [],
+	"/admin": [
+		"src/routes/admin/+layout.server.ts",
+		"src/routes/admin/+layout.server.ts"
+	],
+	"/admin/leads": [
+		"src/routes/admin/leads/+page.server.ts",
+		"src/routes/admin/+layout.server.ts"
+	],
+	"/admin/tenants": [
+		"src/routes/admin/+layout.server.ts"
+	],
 	"/api/admin/stats": [
 		"src/routes/api/admin/stats/+server.ts"
 	],
@@ -20,6 +29,9 @@
 	],
 	"/api/auth/logout": [
 		"src/routes/api/auth/logout/+server.ts"
+	],
+	"/api/auth/register": [
+		"src/routes/api/auth/register/+server.ts"
 	],
 	"/api/auth/signup": [
 		"src/routes/api/auth/signup/+server.ts"

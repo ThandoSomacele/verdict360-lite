@@ -3,26 +3,23 @@ import type { RequestHandler } from './$types';
 import { authService } from '$lib/services/authService';
 import { z } from 'zod';
 
-const loginSchema = z.object({
+const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-  tenantId: z.string().uuid('Invalid tenant ID').optional()
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  tenantId: z.string().uuid('Invalid tenant ID'),
+  role: z.enum(['admin', 'user', 'viewer']).optional()
 });
 
-export const POST: RequestHandler = async ({ request, cookies, locals }) => {
+export const POST: RequestHandler = async ({ request, cookies }) => {
   try {
     const body = await request.json();
 
-    // Add tenant ID from locals if not provided
-    if (!body.tenantId) {
-      body.tenantId = locals.tenantId || '11111111-1111-1111-1111-111111111111';
-    }
-
     // Validate input
-    const validatedData = loginSchema.parse(body);
+    const validatedData = registerSchema.parse(body);
 
-    // Login user
-    const { user, accessToken, refreshToken } = await authService.login(validatedData);
+    // Register user
+    const { user, accessToken, refreshToken } = await authService.register(validatedData);
 
     // Set cookies
     cookies.set('access_token', accessToken, {
@@ -47,7 +44,7 @@ export const POST: RequestHandler = async ({ request, cookies, locals }) => {
       accessToken
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Registration error:', error);
 
     if (error instanceof z.ZodError) {
       return json(
@@ -60,20 +57,20 @@ export const POST: RequestHandler = async ({ request, cookies, locals }) => {
       );
     }
 
-    if (error instanceof Error && error.message === 'Invalid credentials') {
+    if (error instanceof Error && error.message === 'User already exists') {
       return json(
         {
           success: false,
-          error: 'Invalid email or password'
+          error: 'User already exists'
         },
-        { status: 401 }
+        { status: 409 }
       );
     }
 
     return json(
       {
         success: false,
-        error: 'Login failed'
+        error: 'Registration failed'
       },
       { status: 500 }
     );
