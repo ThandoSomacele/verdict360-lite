@@ -5,7 +5,7 @@ import type { Tenant } from '$lib/types';
 
 export const GET: RequestHandler = async ({ locals }) => {
   try {
-    const tenantId = locals.tenantId || 'demo';
+    const tenantId = locals.tenantId || '11111111-1111-1111-1111-111111111111';
     
     // Try to fetch tenant from database
     let tenant: Partial<Tenant> | null = null;

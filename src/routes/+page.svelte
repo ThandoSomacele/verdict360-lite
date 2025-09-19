@@ -90,7 +90,7 @@
       {#await import('$components/ChatWidget.svelte')}
         <div class="fixed bottom-4 right-4 w-16 h-16 bg-blue-600 rounded-full animate-pulse"></div>
       {:then { default: ChatWidget }}
-        <ChatWidget tenantId="demo" />
+        <ChatWidget tenantId="11111111-1111-1111-1111-111111111111" />
       {/await}
     {/if}
   </div>

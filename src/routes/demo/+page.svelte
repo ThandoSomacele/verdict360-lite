@@ -135,5 +135,5 @@
 
 <!-- Chat Widget -->
 {#if mounted}
-  <ChatWidget tenantId="demo" position="bottom-right" theme="light" />
+  <ChatWidget tenantId="11111111-1111-1111-1111-111111111111" position="bottom-right" theme="light" />
 {/if}

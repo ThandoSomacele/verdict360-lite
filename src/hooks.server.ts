@@ -5,7 +5,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Extract tenant ID from subdomain or header
   const hostname = event.url.hostname;
   const subdomain = hostname.split('.')[0];
-  let tenantId = 'demo'; // Default tenant
+  let tenantId = '11111111-1111-1111-1111-111111111111'; // Default tenant UUID
 
   // For development, also check for specific localhost subdomains
   if (dev && hostname.includes('localhost')) {

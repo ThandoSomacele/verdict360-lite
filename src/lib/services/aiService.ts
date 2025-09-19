@@ -83,7 +83,7 @@ export class AIService {
   async generateResponse(
     message: string,
     conversationHistory: ChatMessage[] = [],
-    tenantId: string = 'demo'
+    tenantId: string = '11111111-1111-1111-1111-111111111111'
   ): Promise<AIResponse> {
     try {
       // Build conversation context
@@ -249,7 +249,7 @@ export class AIService {
     };
   }
 
-  async generateWelcomeMessage(tenantId: string = 'demo'): Promise<AIResponse> {
+  async generateWelcomeMessage(tenantId: string = '11111111-1111-1111-1111-111111111111'): Promise<AIResponse> {
     return {
       response: "Hi! I'm Sarah, an AI legal assistant at Demo Law Firm. I can help answer questions and connect you with our attorneys. How may I assist you today?",
       metadata: {
