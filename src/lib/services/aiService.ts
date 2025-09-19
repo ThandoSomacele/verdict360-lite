@@ -103,7 +103,7 @@ export class AIService {
         options: {
           temperature: 0.7,
           top_p: 0.9,
-          max_tokens: 100  // Strict limit for very short responses
+          max_tokens: 45  // Very strict limit to ensure 40-word responses
         }
       };
 
@@ -231,13 +231,28 @@ export class AIService {
     // Determine intent based on user message and AI response
     let intent = 'general_inquiry';
 
+    // Check for legal terms and phrases
+    const legalTerms = [
+      'letter of demand', 'divorce', 'contract', 'agreement', 'deed', 'will',
+      'estate', 'litigation', 'dispute', 'court', 'legal', 'law', 'attorney',
+      'lawyer', 'advocate', 'eviction', 'custody', 'maintenance', 'damages',
+      'claim', 'sue', 'labour', 'employment', 'dismissal', 'ccma', 'tribunal',
+      'criminal', 'defence', 'prosecution', 'bail', 'appeal', 'settlement',
+      'mediation', 'arbitration', 'compliance', 'regulatory', 'intellectual property',
+      'trademark', 'copyright', 'patent', 'property', 'conveyancing', 'transfer',
+      'bond', 'lease', 'rental', 'tenant', 'landlord', 'popia', 'gdpr',
+      'compensation', 'injury', 'accident', 'insurance', 'claim'
+    ];
+
+    const hasLegalTerm = legalTerms.some(term => lowerMessage.includes(term));
+
     if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('good')) {
       intent = 'greeting';
     } else if (shouldOfferConsultation) {
       intent = 'consultation_offer';
     } else if (isDataCollection) {
       intent = 'data_collection';
-    } else if (lowerMessage.includes('legal') || lowerMessage.includes('law') || lowerMessage.includes('attorney')) {
+    } else if (hasLegalTerm) {
       intent = 'legal_inquiry';
     }
 

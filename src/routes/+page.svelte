@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  
+  import ChatWidget from '$lib/components/ChatWidget.svelte';
+
   let mounted = false;
-  
+
   onMount(() => {
     mounted = true;
   });
@@ -86,12 +87,8 @@
         </div>
       </div>
       
-      <!-- Import the ChatWidget component -->
-      {#await import('$components/ChatWidget.svelte')}
-        <div class="fixed bottom-4 right-4 w-16 h-16 bg-blue-600 rounded-full animate-pulse"></div>
-      {:then { default: ChatWidget }}
-        <ChatWidget tenantId="11111111-1111-1111-1111-111111111111" />
-      {/await}
+      <!-- ChatWidget component -->
+      <ChatWidget tenantId="11111111-1111-1111-1111-111111111111" />
     {/if}
   </div>
 </div>

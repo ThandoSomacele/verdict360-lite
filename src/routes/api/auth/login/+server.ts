@@ -6,20 +6,26 @@ import { z } from 'zod';
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
-  tenantId: z.string().uuid('Invalid tenant ID').optional()
+  tenantId: z.string().optional()
 });
 
 export const POST: RequestHandler = async ({ request, cookies, locals }) => {
   try {
     const body = await request.json();
 
-    // Add tenant ID from locals if not provided
-    if (!body.tenantId) {
-      body.tenantId = locals.tenantId || '11111111-1111-1111-1111-111111111111';
+    // Validate input first (without tenantId requirement)
+    const validatedData = loginSchema.parse(body);
+
+    // Add tenant ID from locals or use default
+    if (!validatedData.tenantId || validatedData.tenantId === '') {
+      validatedData.tenantId = locals.tenantId || '11111111-1111-1111-1111-111111111111';
     }
 
-    // Validate input
-    const validatedData = loginSchema.parse(body);
+    // Validate it's a proper UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(validatedData.tenantId)) {
+      validatedData.tenantId = '11111111-1111-1111-1111-111111111111';
+    }
 
     // Login user
     const { user, accessToken, refreshToken } = await authService.login(validatedData);

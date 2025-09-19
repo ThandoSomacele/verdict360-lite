@@ -95,11 +95,17 @@ export class AuthService {
       // Hash password
       const hashedPassword = await this.hashPassword(data.password);
 
+      // Split name into first and last name
+      const nameParts = data.name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       // Create user
       const [user] = await db('users').insert({
         email: data.email,
         password_hash: hashedPassword,
-        name: data.name,
+        first_name: firstName,
+        last_name: lastName,
         tenant_id: data.tenantId,
         role: data.role || 'user',
         status: 'active',
@@ -260,6 +266,8 @@ export class AuthService {
 
       if (user) {
         delete user.password_hash;
+        // Combine first and last name for compatibility
+        user.name = `${user.first_name} ${user.last_name}`.trim();
       }
 
       return user;

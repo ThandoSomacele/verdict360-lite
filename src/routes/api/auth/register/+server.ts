@@ -7,16 +7,27 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  tenantId: z.string().uuid('Invalid tenant ID'),
+  tenantId: z.string().optional(),
   role: z.enum(['admin', 'user', 'viewer']).optional()
 });
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, locals }) => {
   try {
     const body = await request.json();
 
-    // Validate input
+    // Validate input first (without tenantId requirement)
     const validatedData = registerSchema.parse(body);
+
+    // Add tenant ID from locals or use default
+    if (!validatedData.tenantId || validatedData.tenantId === '') {
+      validatedData.tenantId = locals.tenantId || '11111111-1111-1111-1111-111111111111';
+    }
+
+    // Validate it's a proper UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(validatedData.tenantId)) {
+      validatedData.tenantId = '11111111-1111-1111-1111-111111111111';
+    }
 
     // Register user
     const { user, accessToken, refreshToken } = await authService.register(validatedData);

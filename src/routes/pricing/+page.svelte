@@ -9,16 +9,15 @@
   const plans = [
     {
       name: 'Starter',
-      price: 'R2,999',
+      price: 'R1,999',
       period: 'per month',
       description: 'Perfect for solo practitioners and small firms',
       features: [
-        'Up to 100 conversations/month',
-        '1 AI assistant',
-        'Basic customization',
+        'Up to 100 leads/month',
+        '1 AI Assistant',
         'Email support',
-        'Standard response time',
-        'Basic analytics'
+        'Basic analytics',
+        'Standard templates'
       ],
       cta: 'Start Free Trial',
       href: '/signup',
@@ -26,18 +25,17 @@
     },
     {
       name: 'Professional',
-      price: 'R7,999',
+      price: 'R4,999',
       period: 'per month',
       description: 'Ideal for growing law firms',
       features: [
-        'Up to 500 conversations/month',
-        '3 AI assistants',
-        'Advanced customization',
+        'Up to 500 leads/month',
+        '3 AI Assistants',
         'Priority email & phone support',
-        'Fast response time',
         'Advanced analytics',
+        'Custom templates',
         'Calendar integration',
-        'Custom branding'
+        'API access'
       ],
       cta: 'Start Free Trial',
       href: '/signup',
@@ -45,20 +43,18 @@
     },
     {
       name: 'Enterprise',
-      price: 'Custom',
-      period: 'contact us',
+      price: 'R9,999',
+      period: 'per month',
       description: 'For large firms with specific needs',
       features: [
-        'Unlimited conversations',
-        'Unlimited AI assistants',
-        'Full customization',
+        'Unlimited leads',
+        'Unlimited AI Assistants',
         'Dedicated account manager',
-        'Instant response time',
         'Custom analytics & reporting',
-        'API access',
         'White-label solution',
-        'On-premise deployment option',
-        'Custom integrations'
+        'Priority support',
+        'Custom integrations',
+        'On-premise deployment option'
       ],
       cta: 'Contact Sales',
       href: '/contact',
