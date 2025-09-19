@@ -13,8 +13,8 @@
     theme?: 'light' | 'dark';
   }
   
-  let { 
-    tenantId = 'demo',
+  let {
+    tenantId = '11111111-1111-1111-1111-111111111111', // Use actual UUID for demo tenant
     position = 'bottom-right',
     theme = 'light'
   }: Props = $props();

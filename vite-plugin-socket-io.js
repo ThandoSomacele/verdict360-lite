@@ -100,10 +100,23 @@ export function socketIoPlugin() {
         socket.on('submit-contact', async (data) => {
           try {
             const { contactInfo, tenantId } = data;
-            
+
+            // Import the service dynamically to avoid build issues
+            const { chatLeadService } = await import('./src/lib/services/chatLeadService.ts');
+
+            // Save to database and send emails
+            const lead = await chatLeadService.createChatLead(
+              contactInfo,
+              tenantId || '11111111-1111-1111-1111-111111111111', // Use actual UUID
+              [] // We could pass conversation history here if needed
+            );
+
+            console.log(`[${tenantId}] Lead saved to database:`, lead.id);
+
             socket.emit('contact-submitted', {
               success: true,
-              message: 'Thank you! Your information has been received. We will contact you shortly to schedule your consultation.'
+              message: 'Thank you! Your information has been received. We will contact you shortly to schedule your consultation.',
+              leadId: lead.id
             });
 
             // Send follow-up AI message
@@ -118,11 +131,12 @@ export function socketIoPlugin() {
                 intent: 'consultation_scheduled',
                 shouldOfferConsultation: false,
                 isDataCollection: false,
-                tenantId
+                tenantId,
+                leadId: lead.id
               }
             });
 
-            console.log(`[${tenantId}] Contact form submitted:`, contactInfo);
+            console.log(`[${tenantId}] Contact form submitted and emails sent`);
 
           } catch (error) {
             console.error('Contact submission error:', error);
