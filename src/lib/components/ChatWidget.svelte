@@ -290,7 +290,8 @@
     const legalKeywords = [
       'letter of demand', 'owes me money', 'accident', 'injury', 'divorce',
       'contract', 'dispute', 'legal advice', 'sue', 'court', 'eviction',
-      'will', 'estate', 'custody', 'maintenance', 'debt', 'compensation'
+      'will', 'estate', 'custody', 'maintenance', 'debt', 'compensation',
+      'attorney', 'lawyer', 'consultation', 'legal help', 'legal assistance'
     ];
 
     // Find messages containing legal matters
