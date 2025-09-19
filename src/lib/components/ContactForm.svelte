@@ -22,7 +22,7 @@
     phone: '',
     preferredContact: 'email',
     enquiryDetails: initialEnquiry,
-    message: ''
+    message: '',
   });
 
   let isSubmitting = $state(false);
@@ -72,7 +72,7 @@
         phone: '',
         preferredContact: 'email',
         enquiryDetails: '',
-        message: ''
+        message: '',
       };
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -85,13 +85,13 @@
 <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
   <div class="flex justify-between items-center mb-4">
     <h3 class="text-lg font-semibold text-gray-900">Request Consultation</h3>
-    <button
-      onclick={onClose}
-      class="text-gray-400 hover:text-gray-500"
-      aria-label="Close form"
-    >
+    <button onclick={onClose} class="text-gray-400 hover:text-gray-500" aria-label="Close form">
       <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+        <path
+          fill-rule="evenodd"
+          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
       </svg>
     </button>
   </div>
@@ -102,15 +102,13 @@
 
   <form onsubmit={handleSubmit} class="space-y-4">
     <div>
-      <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-        Full Name *
-      </label>
+      <label for="name" class="block text-sm font-medium text-gray-700 mb-1"> Full Name * </label>
       <input
         type="text"
         id="name"
         bind:value={formData.name}
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="John Doe"
+        placeholder="Your full name"
       />
       {#if errors.name}
         <p class="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -118,15 +116,13 @@
     </div>
 
     <div>
-      <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-        Email Address *
-      </label>
+      <label for="email" class="block text-sm font-medium text-gray-700 mb-1"> Email Address * </label>
       <input
         type="email"
         id="email"
         bind:value={formData.email}
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="john@example.com"
+        placeholder="Your email address"
       />
       {#if errors.email}
         <p class="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -134,15 +130,13 @@
     </div>
 
     <div>
-      <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
-        Phone Number *
-      </label>
+      <label for="phone" class="block text-sm font-medium text-gray-700 mb-1"> Phone Number * </label>
       <input
         type="tel"
         id="phone"
         bind:value={formData.phone}
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="+27 12 345 6789"
+        placeholder="Your phone number"
       />
       {#if errors.phone}
         <p class="text-red-500 text-xs mt-1">{errors.phone}</p>
@@ -150,9 +144,7 @@
     </div>
 
     <div>
-      <label for="enquiryDetails" class="block text-sm font-medium text-gray-700 mb-1">
-        Legal Matter Details *
-      </label>
+      <label for="enquiryDetails" class="block text-sm font-medium text-gray-700 mb-1"> Legal Matter Details * </label>
       <textarea
         id="enquiryDetails"
         bind:value={formData.enquiryDetails}
@@ -166,35 +158,21 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        Preferred Contact Method *
-      </label>
+      <label class="block text-sm font-medium text-gray-700 mb-2"> Preferred Contact Method * </label>
       <div class="flex space-x-4">
         <label class="flex items-center">
-          <input
-            type="radio"
-            bind:group={formData.preferredContact}
-            value="email"
-            class="mr-2"
-          />
+          <input type="radio" bind:group={formData.preferredContact} value="email" class="mr-2" />
           <span class="text-sm">Email</span>
         </label>
         <label class="flex items-center">
-          <input
-            type="radio"
-            bind:group={formData.preferredContact}
-            value="phone"
-            class="mr-2"
-          />
+          <input type="radio" bind:group={formData.preferredContact} value="phone" class="mr-2" />
           <span class="text-sm">Phone</span>
         </label>
       </div>
     </div>
 
     <div>
-      <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
-        Additional Message (Optional)
-      </label>
+      <label for="message" class="block text-sm font-medium text-gray-700 mb-1"> Additional Message (Optional) </label>
       <textarea
         id="message"
         bind:value={formData.message}
@@ -214,7 +192,11 @@
           <span class="flex items-center justify-center">
             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Submitting...
           </span>

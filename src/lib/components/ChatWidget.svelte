@@ -283,14 +283,43 @@
   }
 
   function getConversationSummary(): string {
-    // Get last few user messages to create a summary of what the user is asking about
-    const userMessages = messages
-      .filter(m => m.sender === 'user')
-      .slice(-3) // Get last 3 user messages
-      .map(m => m.content)
-      .join(' ');
+    // Extract key legal matter from conversation
+    const userMessages = messages.filter(m => m.sender === 'user');
 
-    return userMessages || '';
+    // Keywords that indicate actual legal matters
+    const legalKeywords = [
+      'letter of demand', 'owes me money', 'accident', 'injury', 'divorce',
+      'contract', 'dispute', 'legal advice', 'sue', 'court', 'eviction',
+      'will', 'estate', 'custody', 'maintenance', 'debt', 'compensation'
+    ];
+
+    // Find messages containing legal matters
+    const relevantMessages = userMessages.filter(msg => {
+      const lower = msg.content.toLowerCase();
+      return legalKeywords.some(keyword => lower.includes(keyword));
+    });
+
+    // If we found legal matter messages, use those; otherwise use last message
+    const messagesToSummarize = relevantMessages.length > 0
+      ? relevantMessages
+      : userMessages.slice(-1);
+
+    // Create a clean summary
+    let summary = messagesToSummarize.map(m => m.content).join('. ');
+
+    // Clean up the summary
+    if (summary.length > 200) {
+      summary = summary.substring(0, 200) + '...';
+    }
+
+    // Add context if it's about a letter of demand
+    if (summary.toLowerCase().includes('letter of demand')) {
+      summary = `Letter of Demand Request: ${summary}`;
+    } else if (summary.toLowerCase().includes('accident')) {
+      summary = `Accident Matter: ${summary}`;
+    }
+
+    return summary || 'General legal enquiry';
   }
 
   let positionClass = $derived(position === 'bottom-left' ? 'bottom-4 left-4' : 'bottom-4 right-4');
@@ -339,6 +368,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="px-3 py-2 bg-gray-50 border-b border-gray-200">
+        <p class="text-[10px] text-gray-600 text-center">
+          AI-powered assistant. Not legal advice. Attorney review required.
+        </p>
       </div>
 
       <!-- Messages -->
