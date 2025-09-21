@@ -165,13 +165,15 @@
         </p>
       </CardContent>
     </Card>
-    
-    <!-- Demo Credentials -->
-    <div class="mt-4 p-4 bg-white bg-opacity-90 rounded-lg">
-      <p class="text-sm text-gray-600 text-center">
-        <strong>Demo Credentials:</strong><br />
-        Admin: admin@verdict360.com / admin123<br />
-        Staff: user@demo.com / demo123
+
+    <!-- Demo Credentials Box -->
+    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <p class="text-sm text-gray-700 text-center">
+        <strong class="text-blue-700">Demo Credentials:</strong><br />
+        <span class="font-mono text-xs">
+          Admin: admin@verdict360.com / admin123<br />
+          Staff: user@demo.com / demo123
+        </span>
       </p>
     </div>
   </div>
