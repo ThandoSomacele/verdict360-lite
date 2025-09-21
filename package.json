@@ -17,6 +17,8 @@
     "test:watch": "jest --watch",
     "db:migrate": "knex migrate:latest",
     "db:seed": "knex seed:run",
+    "tenant:add": "node onboard-tenant.js",
+    "tenant:list": "psql -U postgres -d verdict360 -c 'SELECT id, name, subdomain, plan, status FROM tenants;'",
     "db:rollback": "knex migrate:rollback",
     "db:setup": "npm run db:migrate && npm run db:seed",
     "test:setup": "node scripts/test-setup.js"

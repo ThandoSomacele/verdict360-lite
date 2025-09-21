@@ -5,6 +5,9 @@
 		"src/routes/admin/+layout.server.ts",
 		"src/routes/admin/+layout.server.ts"
 	],
+	"/admin/installation": [
+		"src/routes/admin/+layout.server.ts"
+	],
 	"/admin/leads": [
 		"src/routes/admin/leads/+page.server.ts",
 		"src/routes/admin/+layout.server.ts"
@@ -39,13 +42,20 @@
 	"/api/health": [
 		"src/routes/api/health/+server.ts"
 	],
+	"/api/tenants/check-subdomain": [
+		"src/routes/api/tenants/check-subdomain/+server.ts"
+	],
 	"/api/tenants/current": [
 		"src/routes/api/tenants/current/+server.ts"
+	],
+	"/api/tenants/register": [
+		"src/routes/api/tenants/register/+server.ts"
 	],
 	"/contact": [],
 	"/dashboard": [],
 	"/demo": [],
 	"/login": [],
 	"/pricing": [],
-	"/signup": []
+	"/signup": [],
+	"/welcome": []
 }

@@ -27,7 +27,7 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/about" | "/admin" | "/admin/leads" | "/admin/tenants" | "/api" | "/api/admin" | "/api/admin/stats" | "/api/admin/tenants" | "/api/ai" | "/api/ai/chat" | "/api/ai/welcome" | "/api/auth" | "/api/auth/login" | "/api/auth/logout" | "/api/auth/register" | "/api/auth/signup" | "/api/calendar" | "/api/chat" | "/api/health" | "/api/tenants" | "/api/tenants/current" | "/contact" | "/dashboard" | "/demo" | "/login" | "/pricing" | "/signup" | "/[tenant]";
+		RouteId(): "/" | "/about" | "/admin" | "/admin/installation" | "/admin/leads" | "/admin/tenants" | "/api" | "/api/admin" | "/api/admin/stats" | "/api/admin/tenants" | "/api/ai" | "/api/ai/chat" | "/api/ai/welcome" | "/api/auth" | "/api/auth/login" | "/api/auth/logout" | "/api/auth/register" | "/api/auth/signup" | "/api/calendar" | "/api/chat" | "/api/health" | "/api/tenants" | "/api/tenants/check-subdomain" | "/api/tenants/current" | "/api/tenants/register" | "/contact" | "/dashboard" | "/demo" | "/login" | "/pricing" | "/signup" | "/welcome" | "/[tenant]";
 		RouteParams(): {
 			"/[tenant]": { tenant: string }
 		};
@@ -35,6 +35,7 @@ declare module "$app/types" {
 			"/": { tenant?: string };
 			"/about": Record<string, never>;
 			"/admin": Record<string, never>;
+			"/admin/installation": Record<string, never>;
 			"/admin/leads": Record<string, never>;
 			"/admin/tenants": Record<string, never>;
 			"/api": Record<string, never>;
@@ -53,16 +54,19 @@ declare module "$app/types" {
 			"/api/chat": Record<string, never>;
 			"/api/health": Record<string, never>;
 			"/api/tenants": Record<string, never>;
+			"/api/tenants/check-subdomain": Record<string, never>;
 			"/api/tenants/current": Record<string, never>;
+			"/api/tenants/register": Record<string, never>;
 			"/contact": Record<string, never>;
 			"/dashboard": Record<string, never>;
 			"/demo": Record<string, never>;
 			"/login": Record<string, never>;
 			"/pricing": Record<string, never>;
 			"/signup": Record<string, never>;
+			"/welcome": Record<string, never>;
 			"/[tenant]": { tenant: string }
 		};
-		Pathname(): "/" | "/about" | "/about/" | "/admin" | "/admin/" | "/admin/leads" | "/admin/leads/" | "/admin/tenants" | "/admin/tenants/" | "/api" | "/api/" | "/api/admin" | "/api/admin/" | "/api/admin/stats" | "/api/admin/stats/" | "/api/admin/tenants" | "/api/admin/tenants/" | "/api/ai" | "/api/ai/" | "/api/ai/chat" | "/api/ai/chat/" | "/api/ai/welcome" | "/api/ai/welcome/" | "/api/auth" | "/api/auth/" | "/api/auth/login" | "/api/auth/login/" | "/api/auth/logout" | "/api/auth/logout/" | "/api/auth/register" | "/api/auth/register/" | "/api/auth/signup" | "/api/auth/signup/" | "/api/calendar" | "/api/calendar/" | "/api/chat" | "/api/chat/" | "/api/health" | "/api/health/" | "/api/tenants" | "/api/tenants/" | "/api/tenants/current" | "/api/tenants/current/" | "/contact" | "/contact/" | "/dashboard" | "/dashboard/" | "/demo" | "/demo/" | "/login" | "/login/" | "/pricing" | "/pricing/" | "/signup" | "/signup/" | `/${string}` & {} | `/${string}/` & {};
+		Pathname(): "/" | "/about" | "/about/" | "/admin" | "/admin/" | "/admin/installation" | "/admin/installation/" | "/admin/leads" | "/admin/leads/" | "/admin/tenants" | "/admin/tenants/" | "/api" | "/api/" | "/api/admin" | "/api/admin/" | "/api/admin/stats" | "/api/admin/stats/" | "/api/admin/tenants" | "/api/admin/tenants/" | "/api/ai" | "/api/ai/" | "/api/ai/chat" | "/api/ai/chat/" | "/api/ai/welcome" | "/api/ai/welcome/" | "/api/auth" | "/api/auth/" | "/api/auth/login" | "/api/auth/login/" | "/api/auth/logout" | "/api/auth/logout/" | "/api/auth/register" | "/api/auth/register/" | "/api/auth/signup" | "/api/auth/signup/" | "/api/calendar" | "/api/calendar/" | "/api/chat" | "/api/chat/" | "/api/health" | "/api/health/" | "/api/tenants" | "/api/tenants/" | "/api/tenants/check-subdomain" | "/api/tenants/check-subdomain/" | "/api/tenants/current" | "/api/tenants/current/" | "/api/tenants/register" | "/api/tenants/register/" | "/contact" | "/contact/" | "/dashboard" | "/dashboard/" | "/demo" | "/demo/" | "/login" | "/login/" | "/pricing" | "/pricing/" | "/signup" | "/signup/" | "/welcome" | "/welcome/" | `/${string}` & {} | `/${string}/` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/favicon.png" | "/notification.mp3" | string & {};
 	}
