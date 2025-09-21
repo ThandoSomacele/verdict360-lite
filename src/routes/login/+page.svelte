@@ -171,7 +171,7 @@
       <p class="text-sm text-gray-600 text-center">
         <strong>Demo Credentials:</strong><br />
         Admin: admin@verdict360.com / admin123<br />
-        User: user@demo.com / demo123
+        Staff: user@demo.com / demo123
       </p>
     </div>
   </div>
