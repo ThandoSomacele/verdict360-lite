@@ -202,11 +202,9 @@
     }
   }
 
-  $: {
-    searchTerm;
-    statusFilter;
+  $effect(() => {
     filterConversations();
-  }
+  });
 </script>
 
 <svelte:head>

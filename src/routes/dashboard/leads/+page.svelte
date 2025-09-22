@@ -302,12 +302,9 @@
     }
   }
 
-  $: {
-    searchTerm;
-    statusFilter;
-    sourceFilter;
+  $effect(() => {
     filterLeads();
-  }
+  });
 </script>
 
 <svelte:head>
