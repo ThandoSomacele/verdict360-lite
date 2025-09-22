@@ -51,15 +51,21 @@ export const GET: RequestHandler = async ({ url }) => {
         subdomain: tenant.subdomain,
         email: tenant.email || `admin@${tenant.subdomain}.verdict360.com`,
         phone: tenant.phone || '+27 11 000 0000',
+        // Both formats for compatibility
         status: tenant.subscription_status,
+        subscription_status: tenant.subscription_status,
         plan: tenant.subscription_plan ?
           (tenant.subscription_plan.charAt(0).toUpperCase() + tenant.subscription_plan.slice(1)) :
           'Basic',
+        subscription_plan: tenant.subscription_plan || 'basic',
         userCount: tenant.max_users || 5,
+        user_count: tenant.max_users || 0,
+        conversation_count: 0, // TODO: Join with conversations table
         mrr: tenant.subscription_status === 'active' ?
           (tenant.subscription_plan === 'pro' ? 7999 :
            tenant.subscription_plan === 'enterprise' ? 24999 : 2999) : 0,
         createdAt: tenant.created_at,
+        created_at: tenant.created_at,
         trial_ends_at: tenant.trial_ends_at
       }));
 
