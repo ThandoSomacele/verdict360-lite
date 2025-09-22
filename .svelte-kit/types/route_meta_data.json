@@ -12,7 +12,13 @@
 		"src/routes/admin/leads/+page.server.ts",
 		"src/routes/admin/+layout.server.ts"
 	],
+	"/admin/settings": [
+		"src/routes/admin/+layout.server.ts"
+	],
 	"/admin/tenants": [
+		"src/routes/admin/+layout.server.ts"
+	],
+	"/admin/tenants/[id]": [
 		"src/routes/admin/+layout.server.ts"
 	],
 	"/api/admin/stats": [
@@ -53,9 +59,14 @@
 	],
 	"/contact": [],
 	"/dashboard": [],
+	"/dashboard/ai-settings": [],
+	"/dashboard/analytics": [],
+	"/dashboard/conversations": [],
+	"/dashboard/leads": [],
 	"/demo": [],
 	"/login": [],
 	"/pricing": [],
+	"/settings": [],
 	"/signup": [],
 	"/welcome": []
 }
