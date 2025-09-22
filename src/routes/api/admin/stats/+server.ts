@@ -5,23 +5,71 @@ import { calculatePlatformStats } from '$lib/server/seedDataServer';
 
 export const GET: RequestHandler = async () => {
   try {
-    // Get stats from server-side seed data
-    const stats = calculatePlatformStats();
+    let stats = {
+      total_tenants: 0,
+      active_subscriptions: 0,
+      trial_subscriptions: 0,
+      monthly_conversations: 0,
+      monthly_leads: 0,
+      monthly_appointments: 0,
+      monthly_revenue: 0
+    };
 
-    // Try to get real stats from database if available
+    // Try to get real stats from database
     try {
+      // Get tenant counts
       const [
         tenantCount,
-        // Add more queries here when tables are ready
+        activeCount,
+        trialCount,
+        conversationCount,
+        leadCount
       ] = await Promise.all([
         db('tenants').count('id as count').first(),
+        db('tenants')
+          .where('subscription_status', 'active')
+          .count('id as count')
+          .first(),
+        db('tenants')
+          .where('subscription_status', 'trial')
+          .count('id as count')
+          .first(),
+        db('conversations').count('id as count').first().catch(() => ({ count: 0 })),
+        db('chat_leads').count('id as count').first().catch(() => ({ count: 0 }))
       ]);
 
-      if (tenantCount && tenantCount.count) {
-        stats.total_tenants = parseInt(tenantCount.count as string);
-      }
+      // Get monthly revenue from active subscriptions
+      const revenueData = await db('tenants')
+        .where('subscription_status', 'active')
+        .select('subscription_plan');
+
+      const planPricing: Record<string, number> = {
+        'basic': 2999,
+        'pro': 7999,
+        'enterprise': 24999
+      };
+
+      const monthlyRevenue = revenueData.reduce((total, tenant) => {
+        const plan = tenant.subscription_plan?.toLowerCase();
+        const price = planPricing[plan] || 0;
+        return total + price;
+      }, 0);
+
+      stats = {
+        total_tenants: parseInt(tenantCount?.count as string) || 0,
+        active_subscriptions: parseInt(activeCount?.count as string) || 0,
+        trial_subscriptions: parseInt(trialCount?.count as string) || 0,
+        monthly_conversations: parseInt(conversationCount?.count as string) || 0,
+        monthly_leads: parseInt(leadCount?.count as string) || 0,
+        monthly_appointments: 0, // Will be implemented when appointments table has data
+        monthly_revenue: monthlyRevenue
+      };
+
     } catch (dbError) {
-      // Database not available, use seed data stats
+      console.error('Database query failed:', dbError);
+      console.log('Using seed data as fallback');
+      // Fall back to seed data if database fails
+      stats = calculatePlatformStats();
     }
 
     return json(stats);
@@ -33,10 +81,10 @@ export const GET: RequestHandler = async () => {
       total_tenants: 4,
       active_subscriptions: 1,
       trial_subscriptions: 3,
-      monthly_conversations: 156,
-      monthly_leads: 42,
-      monthly_appointments: 18,
-      monthly_revenue: 2999
+      monthly_conversations: 0,
+      monthly_leads: 0,
+      monthly_appointments: 0,
+      monthly_revenue: 7999
     });
   }
 };

@@ -27,8 +27,9 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/about" | "/admin" | "/admin/installation" | "/admin/leads" | "/admin/settings" | "/admin/tenants" | "/admin/tenants/[id]" | "/api" | "/api/admin" | "/api/admin/stats" | "/api/admin/tenants" | "/api/ai" | "/api/ai/chat" | "/api/ai/welcome" | "/api/auth" | "/api/auth/login" | "/api/auth/logout" | "/api/auth/register" | "/api/auth/signup" | "/api/calendar" | "/api/chat" | "/api/health" | "/api/tenants" | "/api/tenants/check-subdomain" | "/api/tenants/current" | "/api/tenants/register" | "/contact" | "/dashboard" | "/dashboard/ai-settings" | "/dashboard/analytics" | "/dashboard/conversations" | "/dashboard/leads" | "/demo" | "/login" | "/pricing" | "/settings" | "/signup" | "/welcome" | "/[tenant]";
+		RouteId(): "/" | "/about" | "/admin" | "/admin/installation" | "/admin/invoices" | "/admin/invoices/[id]" | "/admin/leads" | "/admin/settings" | "/admin/tenants" | "/admin/tenants/new" | "/admin/tenants/[id]" | "/api" | "/api/admin" | "/api/admin/stats" | "/api/admin/system" | "/api/admin/system/health" | "/api/admin/tenants" | "/api/ai" | "/api/ai/chat" | "/api/ai/welcome" | "/api/auth" | "/api/auth/login" | "/api/auth/logout" | "/api/auth/register" | "/api/auth/signup" | "/api/calendar" | "/api/chat" | "/api/health" | "/api/tenants" | "/api/tenants/check-subdomain" | "/api/tenants/current" | "/api/tenants/register" | "/contact" | "/dashboard" | "/dashboard/ai-settings" | "/dashboard/analytics" | "/dashboard/conversations" | "/dashboard/leads" | "/demo" | "/login" | "/pricing" | "/settings" | "/signup" | "/welcome" | "/[tenant]";
 		RouteParams(): {
+			"/admin/invoices/[id]": { id: string };
 			"/admin/tenants/[id]": { id: string };
 			"/[tenant]": { tenant: string }
 		};
@@ -37,13 +38,18 @@ declare module "$app/types" {
 			"/about": Record<string, never>;
 			"/admin": { id?: string };
 			"/admin/installation": Record<string, never>;
+			"/admin/invoices": { id?: string };
+			"/admin/invoices/[id]": { id: string };
 			"/admin/leads": Record<string, never>;
 			"/admin/settings": Record<string, never>;
 			"/admin/tenants": { id?: string };
+			"/admin/tenants/new": Record<string, never>;
 			"/admin/tenants/[id]": { id: string };
 			"/api": Record<string, never>;
 			"/api/admin": Record<string, never>;
 			"/api/admin/stats": Record<string, never>;
+			"/api/admin/system": Record<string, never>;
+			"/api/admin/system/health": Record<string, never>;
 			"/api/admin/tenants": Record<string, never>;
 			"/api/ai": Record<string, never>;
 			"/api/ai/chat": Record<string, never>;
@@ -74,7 +80,7 @@ declare module "$app/types" {
 			"/welcome": Record<string, never>;
 			"/[tenant]": { tenant: string }
 		};
-		Pathname(): "/" | "/about" | "/about/" | "/admin" | "/admin/" | "/admin/installation" | "/admin/installation/" | "/admin/leads" | "/admin/leads/" | "/admin/settings" | "/admin/settings/" | "/admin/tenants" | "/admin/tenants/" | `/admin/tenants/${string}` & {} | `/admin/tenants/${string}/` & {} | "/api" | "/api/" | "/api/admin" | "/api/admin/" | "/api/admin/stats" | "/api/admin/stats/" | "/api/admin/tenants" | "/api/admin/tenants/" | "/api/ai" | "/api/ai/" | "/api/ai/chat" | "/api/ai/chat/" | "/api/ai/welcome" | "/api/ai/welcome/" | "/api/auth" | "/api/auth/" | "/api/auth/login" | "/api/auth/login/" | "/api/auth/logout" | "/api/auth/logout/" | "/api/auth/register" | "/api/auth/register/" | "/api/auth/signup" | "/api/auth/signup/" | "/api/calendar" | "/api/calendar/" | "/api/chat" | "/api/chat/" | "/api/health" | "/api/health/" | "/api/tenants" | "/api/tenants/" | "/api/tenants/check-subdomain" | "/api/tenants/check-subdomain/" | "/api/tenants/current" | "/api/tenants/current/" | "/api/tenants/register" | "/api/tenants/register/" | "/contact" | "/contact/" | "/dashboard" | "/dashboard/" | "/dashboard/ai-settings" | "/dashboard/ai-settings/" | "/dashboard/analytics" | "/dashboard/analytics/" | "/dashboard/conversations" | "/dashboard/conversations/" | "/dashboard/leads" | "/dashboard/leads/" | "/demo" | "/demo/" | "/login" | "/login/" | "/pricing" | "/pricing/" | "/settings" | "/settings/" | "/signup" | "/signup/" | "/welcome" | "/welcome/" | `/${string}` & {} | `/${string}/` & {};
+		Pathname(): "/" | "/about" | "/about/" | "/admin" | "/admin/" | "/admin/installation" | "/admin/installation/" | "/admin/invoices" | "/admin/invoices/" | `/admin/invoices/${string}` & {} | `/admin/invoices/${string}/` & {} | "/admin/leads" | "/admin/leads/" | "/admin/settings" | "/admin/settings/" | "/admin/tenants" | "/admin/tenants/" | "/admin/tenants/new" | "/admin/tenants/new/" | `/admin/tenants/${string}` & {} | `/admin/tenants/${string}/` & {} | "/api" | "/api/" | "/api/admin" | "/api/admin/" | "/api/admin/stats" | "/api/admin/stats/" | "/api/admin/system" | "/api/admin/system/" | "/api/admin/system/health" | "/api/admin/system/health/" | "/api/admin/tenants" | "/api/admin/tenants/" | "/api/ai" | "/api/ai/" | "/api/ai/chat" | "/api/ai/chat/" | "/api/ai/welcome" | "/api/ai/welcome/" | "/api/auth" | "/api/auth/" | "/api/auth/login" | "/api/auth/login/" | "/api/auth/logout" | "/api/auth/logout/" | "/api/auth/register" | "/api/auth/register/" | "/api/auth/signup" | "/api/auth/signup/" | "/api/calendar" | "/api/calendar/" | "/api/chat" | "/api/chat/" | "/api/health" | "/api/health/" | "/api/tenants" | "/api/tenants/" | "/api/tenants/check-subdomain" | "/api/tenants/check-subdomain/" | "/api/tenants/current" | "/api/tenants/current/" | "/api/tenants/register" | "/api/tenants/register/" | "/contact" | "/contact/" | "/dashboard" | "/dashboard/" | "/dashboard/ai-settings" | "/dashboard/ai-settings/" | "/dashboard/analytics" | "/dashboard/analytics/" | "/dashboard/conversations" | "/dashboard/conversations/" | "/dashboard/leads" | "/dashboard/leads/" | "/demo" | "/demo/" | "/login" | "/login/" | "/pricing" | "/pricing/" | "/settings" | "/settings/" | "/signup" | "/signup/" | "/welcome" | "/welcome/" | `/${string}` & {} | `/${string}/` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/favicon.png" | "/notification.mp3" | string & {};
 	}

@@ -8,6 +8,12 @@
 	"/admin/installation": [
 		"src/routes/admin/+layout.server.ts"
 	],
+	"/admin/invoices": [
+		"src/routes/admin/+layout.server.ts"
+	],
+	"/admin/invoices/[id]": [
+		"src/routes/admin/+layout.server.ts"
+	],
 	"/admin/leads": [
 		"src/routes/admin/leads/+page.server.ts",
 		"src/routes/admin/+layout.server.ts"
@@ -18,11 +24,17 @@
 	"/admin/tenants": [
 		"src/routes/admin/+layout.server.ts"
 	],
+	"/admin/tenants/new": [
+		"src/routes/admin/+layout.server.ts"
+	],
 	"/admin/tenants/[id]": [
 		"src/routes/admin/+layout.server.ts"
 	],
 	"/api/admin/stats": [
 		"src/routes/api/admin/stats/+server.ts"
+	],
+	"/api/admin/system/health": [
+		"src/routes/api/admin/system/health/+server.ts"
 	],
 	"/api/admin/tenants": [
 		"src/routes/api/admin/tenants/+server.ts"

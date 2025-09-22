@@ -23,7 +23,10 @@ export const nodes = [
 	() => import('./nodes/19'),
 	() => import('./nodes/20'),
 	() => import('./nodes/21'),
-	() => import('./nodes/22')
+	() => import('./nodes/22'),
+	() => import('./nodes/23'),
+	() => import('./nodes/24'),
+	() => import('./nodes/25')
 ];
 
 export const server_loads = [2];
@@ -33,22 +36,25 @@ export const dictionary = {
 		"/about": [4],
 		"/admin": [5,[2]],
 		"/admin/installation": [6,[2]],
-		"/admin/leads": [~7,[2]],
-		"/admin/settings": [8,[2]],
-		"/admin/tenants": [9,[2]],
-		"/admin/tenants/[id]": [10,[2]],
-		"/contact": [11],
-		"/dashboard": [12],
-		"/dashboard/ai-settings": [13],
-		"/dashboard/analytics": [14],
-		"/dashboard/conversations": [15],
-		"/dashboard/leads": [16],
-		"/demo": [17],
-		"/login": [18],
-		"/pricing": [19],
-		"/settings": [20],
-		"/signup": [21],
-		"/welcome": [22]
+		"/admin/invoices": [7,[2]],
+		"/admin/invoices/[id]": [8,[2]],
+		"/admin/leads": [~9,[2]],
+		"/admin/settings": [10,[2]],
+		"/admin/tenants": [11,[2]],
+		"/admin/tenants/new": [13,[2]],
+		"/admin/tenants/[id]": [12,[2]],
+		"/contact": [14],
+		"/dashboard": [15],
+		"/dashboard/ai-settings": [16],
+		"/dashboard/analytics": [17],
+		"/dashboard/conversations": [18],
+		"/dashboard/leads": [19],
+		"/demo": [20],
+		"/login": [21],
+		"/pricing": [22],
+		"/settings": [23],
+		"/signup": [24],
+		"/welcome": [25]
 	};
 
 export const hooks = {

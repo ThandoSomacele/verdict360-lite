@@ -233,7 +233,7 @@
               id="search"
               placeholder="Search by name or email..."
               bind:value={searchTerm}
-              onchange={fetchTenants}
+              oninput={() => fetchTenants()}
               class="w-full"
             />
           </div>
@@ -267,8 +267,8 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Plans</option>
-              <option value="starter">Starter</option>
-              <option value="professional">Professional</option>
+              <option value="basic">Basic</option>
+              <option value="pro">Professional</option>
               <option value="enterprise">Enterprise</option>
             </select>
           </div>
@@ -321,110 +321,7 @@
                     </td>
                   </tr>
                 {/if}
-                
-                <!-- Demo Data -->
-                <tr class="border-b hover:bg-gray-50">
-                  <td class="py-3 px-4">
-                    <div>
-                      <div class="font-medium">Smith & Associates</div>
-                      <div class="text-sm text-gray-500">smith.verdict360.com</div>
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <div class="text-sm">
-                      <div>john@smithlaw.co.za</div>
-                      <div class="text-gray-500">+27 11 234 5678</div>
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="default">Professional</Badge>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="success">Active</Badge>
-                  </td>
-                  <td class="py-3 px-4">8</td>
-                  <td class="py-3 px-4 font-medium">R7,999</td>
-                  <td class="py-3 px-4 text-sm text-gray-600">Dec 01, 2024</td>
-                  <td class="py-3 px-4">
-                    <div class="flex space-x-2">
-                      <Button size="sm" variant="outline" onclick={() => window.location.href = '/admin/tenants/smith'}>
-                        View
-                      </Button>
-                      <Button size="sm" variant="outline" onclick={() => toggleTenantStatus('smith', 'active')}>
-                        Suspend
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-                
-                <tr class="border-b hover:bg-gray-50">
-                  <td class="py-3 px-4">
-                    <div>
-                      <div class="font-medium">Cape Town Legal</div>
-                      <div class="text-sm text-gray-500">capetown.verdict360.com</div>
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <div class="text-sm">
-                      <div>info@ctlegal.co.za</div>
-                      <div class="text-gray-500">+27 21 456 7890</div>
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="default">Starter</Badge>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="warning">Trial</Badge>
-                  </td>
-                  <td class="py-3 px-4">3</td>
-                  <td class="py-3 px-4 font-medium">R0</td>
-                  <td class="py-3 px-4 text-sm text-gray-600">Dec 10, 2024</td>
-                  <td class="py-3 px-4">
-                    <div class="flex space-x-2">
-                      <Button size="sm" variant="outline" onclick={() => window.location.href = '/admin/tenants/capetown'}>
-                        View
-                      </Button>
-                      <Button size="sm" variant="default">
-                        Convert
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-                
-                <tr class="border-b hover:bg-gray-50">
-                  <td class="py-3 px-4">
-                    <div>
-                      <div class="font-medium">Johannesburg Associates</div>
-                      <div class="text-sm text-gray-500">jhb.verdict360.com</div>
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <div class="text-sm">
-                      <div>admin@jhblaw.co.za</div>
-                      <div class="text-gray-500">+27 11 987 6543</div>
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="default">Enterprise</Badge>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="success">Active</Badge>
-                  </td>
-                  <td class="py-3 px-4">25</td>
-                  <td class="py-3 px-4 font-medium">R24,999</td>
-                  <td class="py-3 px-4 text-sm text-gray-600">Nov 15, 2024</td>
-                  <td class="py-3 px-4">
-                    <div class="flex space-x-2">
-                      <Button size="sm" variant="outline" onclick={() => window.location.href = '/admin/tenants/jhb'}>
-                        View
-                      </Button>
-                      <Button size="sm" variant="outline" onclick={() => toggleTenantStatus('jhb', 'active')}>
-                        Suspend
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-                
+
                 {#each tenants as tenant}
                   <tr class="border-b hover:bg-gray-50">
                     <td class="py-3 px-4">
