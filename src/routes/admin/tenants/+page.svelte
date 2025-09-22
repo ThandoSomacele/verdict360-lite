@@ -17,6 +17,23 @@
   let totalPages = $state(1);
   
   onMount(async () => {
+    // Clear any old invalid data and use proper seed data
+    const storedTenants = localStorage.getItem('tenants');
+    if (storedTenants) {
+      try {
+        const tenants = JSON.parse(storedTenants);
+        // Check if any tenant has invalid data
+        const hasInvalidData = tenants.some((t: any) =>
+          !t.created_at || !t.admin_email || t.admin_email === undefined
+        );
+        if (hasInvalidData) {
+          // Clear and re-initialize with proper seed data
+          localStorage.removeItem('tenants');
+        }
+      } catch (e) {
+        localStorage.removeItem('tenants');
+      }
+    }
     await fetchTenants();
   });
   
@@ -30,20 +47,87 @@
         status: statusFilter,
         plan: planFilter
       });
-      
+
       const response = await fetch(`/api/admin/tenants?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         tenants = data.tenants || [];
         totalPages = data.totalPages || 1;
+      } else {
+        // Fallback to localStorage data for demo
+        const storedTenants = JSON.parse(localStorage.getItem('tenants') || '[]');
+        const formattedTenants = storedTenants.map(tenant => ({
+          ...tenant,
+          email: tenant.admin_email || tenant.email || 'contact@' + (tenant.subdomain || 'example') + '.co.za',
+          phone: tenant.admin_phone || tenant.phone || '+27 11 000 0000',
+          userCount: tenant.max_users || tenant.userCount || 5,
+          mrr: getPlanPrice(tenant.plan),
+          createdAt: tenant.created_at || tenant.createdAt || new Date().toISOString()
+        }));
+
+        // Apply filters
+        let filtered = formattedTenants;
+        if (searchTerm) {
+          filtered = filtered.filter(t =>
+            t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.email.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+        if (statusFilter !== 'all') {
+          filtered = filtered.filter(t => t.status === statusFilter);
+        }
+        if (planFilter !== 'all') {
+          filtered = filtered.filter(t => t.plan.toLowerCase() === planFilter);
+        }
+
+        tenants = filtered;
+        totalPages = 1;
       }
     } catch (error) {
       console.error('Error fetching tenants:', error);
+      // Fallback to localStorage data for demo
+      const storedTenants = JSON.parse(localStorage.getItem('tenants') || '[]');
+      const formattedTenants = storedTenants.map(tenant => ({
+        ...tenant,
+        email: tenant.admin_email || tenant.email || 'contact@' + (tenant.subdomain || 'example') + '.co.za',
+        phone: tenant.admin_phone || tenant.phone || '+27 11 000 0000',
+        userCount: tenant.max_users || tenant.userCount || 5,
+        mrr: getPlanPrice(tenant.plan),
+        createdAt: tenant.created_at || tenant.createdAt || new Date().toISOString()
+      }));
+
+      // Apply filters
+      let filtered = formattedTenants;
+      if (searchTerm) {
+        filtered = filtered.filter(t =>
+          t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          t.email.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(t => t.status === statusFilter);
+      }
+      if (planFilter !== 'all') {
+        filtered = filtered.filter(t => t.plan.toLowerCase() === planFilter);
+      }
+
+      tenants = filtered;
+      totalPages = 1;
     } finally {
       loading = false;
+    }
+  }
+
+  function getPlanPrice(plan: string) {
+    const planLower = (plan || '').toLowerCase();
+    switch(planLower) {
+      case 'starter': return 2999;
+      case 'professional': return 7999;
+      case 'enterprise': return 24999;
+      default: return 0;
     }
   }
   
@@ -70,18 +154,36 @@
   }
   
   function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('en-ZA', {
+    if (!dateString) {
+      return new Date().toLocaleDateString('en-ZA', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return new Date().toLocaleDateString('en-ZA', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    return date.toLocaleDateString('en-ZA', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   }
-  
+
   function formatCurrency(amount: number) {
+    const validAmount = isNaN(amount) || amount === undefined || amount === null ? 0 : amount;
     return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
-      currency: 'ZAR'
-    }).format(amount);
+      currency: 'ZAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(validAmount);
   }
 </script>
 

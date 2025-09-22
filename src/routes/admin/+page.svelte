@@ -147,15 +147,21 @@
   function getStatusVariant(status: string): 'success' | 'warning' | 'destructive' | 'secondary' | 'default' {
     switch (status) {
       case 'active': return 'success';
+      case 'trial': return 'default';
       case 'trialing': return 'default';
       case 'past_due': return 'warning';
       case 'canceled': return 'destructive';
       case 'suspended': return 'secondary';
+      case 'inactive': return 'secondary';
       default: return 'secondary';
     }
   }
-  
+
   function formatCurrency(amount: number): string {
+    // Handle invalid amounts
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      amount = 0;
+    }
     return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
       currency: 'ZAR'
