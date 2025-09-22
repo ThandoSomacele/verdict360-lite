@@ -9,6 +9,8 @@
   // Don't show header/footer on admin pages
   let showLayout = $derived(!$page.url.pathname.startsWith('/admin'));
 
+  let { children } = $props();
+
   onMount(() => {
     // Initialize seed data on first load
     initializeSeedData();
@@ -20,7 +22,7 @@
 {/if}
 
 <main class="flex-1">
-  <slot />
+  {@render children()}
 </main>
 
 {#if showLayout}

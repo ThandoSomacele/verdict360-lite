@@ -1,1 +1,0 @@
-import{ad as h,ae as k,x,af as S,ag as T}from"./CHEZFaFW.js";function t(r,f){return r===f||(r==null?void 0:r[T])===f}function A(r={},f,a,c){return h(()=>{var i,s;return k(()=>{i=s,s=[],x(()=>{r!==a(...s)&&(f(r,...s),i&&t(a(...i),r)&&f(null,...i))})}),()=>{S(()=>{s&&t(a(...s),r)&&f(null,...s)})}}),r}export{A as b};

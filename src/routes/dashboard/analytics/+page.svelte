@@ -149,10 +149,9 @@
     return num.toString();
   }
 
-  $: {
-    dateRange;
+  $effect(() => {
     fetchAnalytics();
-  }
+  });
 </script>
 
 <svelte:head>

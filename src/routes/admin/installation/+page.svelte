@@ -39,32 +39,34 @@
   frameborder="0">
 </iframe>`;
 
-  // WordPress plugin code
-  $: wordpressCode = `<?php
-/**
- * Plugin Name: Verdict 360 Legal Assistant
- * Description: AI-powered legal assistant for your law firm website
- * Version: 1.0
- */
-
-function verdict360_chat_widget() {
-    ?>
-    <script>
-      (function(w,d,s,o,f,js,fjs){
-        w['Verdict360']=o;w[o]=w[o]||function(){
-        (w[o].q=w[o].q||[]).push(arguments)};
-        js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-        js.id=o;js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
-      }(window,document,'script','v360','https://<?php echo '${subdomain}'; ?>.verdict360.com/widget.js'));
-
-      v360('init', {
-        tenantId: '<?php echo '${tenantId}'; ?>',
-        position: 'bottom-right'
-      });
-    </script>
-    <?php
-}
-add_action('wp_footer', 'verdict360_chat_widget');`;
+  // WordPress plugin code (using backtick escape)
+  $: wordpressCode = [
+    '<?php',
+    '/**',
+    ' * Plugin Name: Verdict 360 Legal Assistant',
+    ' * Description: AI-powered legal assistant for your law firm website',
+    ' * Version: 1.0',
+    ' */',
+    '',
+    'function verdict360_chat_widget() {',
+    '    ?>',
+    '    <script>',
+    '      (function(w,d,s,o,f,js,fjs){',
+    "        w['Verdict360']=o;w[o]=w[o]||function(){",
+    '        (w[o].q=w[o].q||[]).push(arguments)};',
+    "        js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];",
+    "        js.id=o;js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);",
+    "      }(window,document,'script','v360','https://<?php echo \\$subdomain; ?>.verdict360.com/widget.js'));",
+    '',
+    "      v360('init', {",
+    "        tenantId: '<?php echo \\$tenantId; ?>',",
+    "        position: 'bottom-right'",
+    '      });',
+    '    </' + 'script>',
+    '    <?php',
+    '}',
+    "add_action('wp_footer', 'verdict360_chat_widget');"
+  ].join('\n');
 
   async function copyToClipboard(text: string, type: string) {
     try {

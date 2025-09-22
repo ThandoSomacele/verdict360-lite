@@ -1,0 +1,87 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".vercel/output",
+  "framework": "sveltekit",
+  "installCommand": "npm install",
+  "functions": {
+    "src/routes/**/*.js": {
+      "maxDuration": 30
+    },
+    "src/routes/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "DATABASE_URL": "@verdict360_database_url",
+      "REDIS_URL": "@verdict360_redis_url",
+      "JWT_SECRET": "@verdict360_jwt_secret",
+      "ENCRYPTION_KEY": "@verdict360_encryption_key",
+      "STRIPE_SECRET_KEY": "@verdict360_stripe_secret",
+      "STRIPE_WEBHOOK_SECRET": "@verdict360_stripe_webhook",
+      "SMTP_HOST": "@verdict360_smtp_host",
+      "SMTP_PORT": "@verdict360_smtp_port",
+      "SMTP_USER": "@verdict360_smtp_user",
+      "SMTP_PASS": "@verdict360_smtp_pass",
+      "GOOGLE_CLIENT_ID": "@verdict360_google_client_id",
+      "GOOGLE_CLIENT_SECRET": "@verdict360_google_client_secret",
+      "GOOGLE_REDIRECT_URI": "@verdict360_google_redirect_uri",
+      "OLLAMA_BASE_URL": "@verdict360_ollama_url",
+      "PUBLIC_DOMAIN_SUFFIX": "verdict360.com"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ]
+}
