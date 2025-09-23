@@ -582,7 +582,9 @@
                     bind:value={settings.appearance.custom_css}
                     class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                     rows="6"
-                    placeholder=".chat-widget {&#10;  /* Your custom styles */&#10;}"
+                    placeholder={`.chat-widget {
+  /* Your custom styles */
+}`}
                   ></textarea>
                 </div>
                 <Button on:click={() => saveSettings('appearance')} disabled={loading}>
@@ -818,7 +820,7 @@
                   <Button variant="outline">Change Plan</Button>
                   <Button variant="outline">Update Payment Method</Button>
                   <Button variant="outline">View Invoices</Button>
-                  <Button variant="destructive" variant="outline">Cancel Subscription</Button>
+                  <Button variant="destructive">Cancel Subscription</Button>
                 </div>
               </div>
             </CardContent>

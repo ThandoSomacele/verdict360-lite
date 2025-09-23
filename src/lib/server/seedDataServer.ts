@@ -1,7 +1,7 @@
 // Server-side utility for accessing seed data
 // This will be used by API endpoints since they don't have access to browser localStorage
 
-import { defaultTenants, defaultUsers, defaultConversations, defaultLeads, defaultMessages } from '$lib/utils/seedData';
+import { defaultTenants, defaultUsers, defaultConversations, defaultLeads, sampleMessages } from '$lib/utils/seedData';
 
 // In-memory store for seed data (simulating localStorage on server)
 let serverSeedData = {
@@ -9,7 +9,7 @@ let serverSeedData = {
   users: defaultUsers,
   conversations: defaultConversations,
   leads: defaultLeads,
-  messages: defaultMessages
+  messages: sampleMessages
 };
 
 export function getServerTenants() {

@@ -159,8 +159,10 @@
           </CardHeader>
           <CardContent>
             <p class="text-gray-600">
-              Absolutely. We use enterprise-grade encryption and are fully POPIA compliant. 
-              Your data is stored in secure South African data centers and never shared with third parties.
+              Absolutely. We use enterprise-grade encryption and are fully POPIA compliant.
+              Your law firm's data can be stored in South African data centers (Azure Cape Town
+              or AWS Cape Town) ensuring compliance with local data sovereignty requirements.
+              All data is encrypted at rest and in transit, with strict access controls.
             </p>
           </CardContent>
         </Card>
