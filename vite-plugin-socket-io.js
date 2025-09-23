@@ -1,7 +1,5 @@
 import { Server } from 'socket.io';
-import { AIService } from './src/lib/services/aiService.ts';
-
-const aiService = new AIService();
+import { aiService } from './src/lib/services/aiService.ts';
 
 export function socketIoPlugin() {
   return {

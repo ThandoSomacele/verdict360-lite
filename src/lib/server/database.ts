@@ -1,5 +1,5 @@
 import knex from 'knex';
-import dbConfig from './config/database.js';
+import dbConfig from './config/database';
 
 const environment = process.env.NODE_ENV || 'development';
 const config = dbConfig[environment as keyof typeof dbConfig];

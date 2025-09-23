@@ -57,8 +57,14 @@
 	"/api/auth/signup": [
 		"src/routes/api/auth/signup/+server.ts"
 	],
+	"/api/chat": [
+		"src/routes/api/chat/+server.ts"
+	],
 	"/api/health": [
 		"src/routes/api/health/+server.ts"
+	],
+	"/api/leads": [
+		"src/routes/api/leads/+server.ts"
 	],
 	"/api/tenants/check-subdomain": [
 		"src/routes/api/tenants/check-subdomain/+server.ts"
