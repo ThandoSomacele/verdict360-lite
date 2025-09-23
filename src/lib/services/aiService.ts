@@ -1,6 +1,7 @@
 import axios from 'axios';
 import removeMd from 'remove-markdown';
 import type { ChatMessage, AIResponse } from '$lib/types';
+import { groqService } from './groqService';
 
 interface OllamaRequest {
   model: string;
@@ -16,6 +17,8 @@ interface OllamaRequest {
   };
 }
 
+// Using Groq Cloud instead of Ollama for production
+const USE_GROQ = process.env.USE_GROQ !== 'false';
 const OLLAMA_BASE_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const DEFAULT_MODEL = process.env.AI_MODEL || 'llama3.2:latest';
 
@@ -96,19 +99,32 @@ export class AIService {
         { role: 'user' as const, content: message }
       ];
 
-      const request: OllamaRequest = {
-        model: this.model,
-        messages,
-        stream: false,
-        options: {
-          temperature: 0.7,
-          top_p: 0.9,
-          max_tokens: 45  // Very strict limit to ensure 40-word responses
-        }
-      };
+      let aiResponse: string;
 
-      const response = await axios.post(`${this.baseUrl}/api/chat`, request);
-      let aiResponse = response.data.message?.content || 'I apologize, but I encountered an error processing your request.';
+      // Use Groq if available, fallback to Ollama
+      if (USE_GROQ && groqService.isAvailable()) {
+        const groqResponse = await groqService.chat(messages);
+        if (groqResponse.success && groqResponse.data) {
+          aiResponse = groqResponse.data;
+        } else {
+          throw new Error(groqResponse.error || 'Groq service failed');
+        }
+      } else {
+        // Fallback to Ollama for local development
+        const request: OllamaRequest = {
+          model: this.model,
+          messages,
+          stream: false,
+          options: {
+            temperature: 0.7,
+            top_p: 0.9,
+            max_tokens: 45  // Very strict limit to ensure 40-word responses
+          }
+        };
+
+        const response = await axios.post(`${this.baseUrl}/api/chat`, request);
+        aiResponse = response.data.message?.content || 'I apologize, but I encountered an error processing your request.';
+      }
 
       // Strip any markdown formatting that might still come through
       aiResponse = this.stripMarkdown(aiResponse);
