@@ -53,6 +53,10 @@ declare module '$env/static/private' {
 	export const AI_MODEL: string;
 	export const AI_MAX_TOKENS: string;
 	export const AI_TEMPERATURE: string;
+	export const VITE_GROQ_API_KEY: string;
+	export const VITE_GROQ_MODEL: string;
+	export const GROQ_API_KEY: string;
+	export const GROQ_MODEL: string;
 	export const CALENDAR_REDIRECT_URI: string;
 	export const SMTP_PASS: string;
 	export const UPLOAD_PATH: string;
@@ -87,7 +91,6 @@ declare module '$env/static/private' {
 	export const ORIGINAL_XDG_CURRENT_DESKTOP: string;
 	export const MallocNanoZone: string;
 	export const COLOR: string;
-	export const VIPSHOME: string;
 	export const npm_config_noproxy: string;
 	export const npm_config_local_prefix: string;
 	export const ENABLE_IDE_INTEGRATION: string;
@@ -108,6 +111,7 @@ declare module '$env/static/private' {
 	export const PATH: string;
 	export const npm_package_json: string;
 	export const _: string;
+	export const LaunchInstanceID: string;
 	export const npm_config_userconfig: string;
 	export const npm_config_init_module: string;
 	export const USER_ZDOTDIR: string;
@@ -144,6 +148,7 @@ declare module '$env/static/private' {
 	export const INFOPATH: string;
 	export const HOMEBREW_CELLAR: string;
 	export const CLAUDECODE: string;
+	export const SECURITYSESSIONID: string;
 	export const npm_node_execpath: string;
 	export const npm_config_prefix: string;
 	export const COLORTERM: string;
@@ -204,6 +209,10 @@ declare module '$env/dynamic/private' {
 		AI_MODEL: string;
 		AI_MAX_TOKENS: string;
 		AI_TEMPERATURE: string;
+		VITE_GROQ_API_KEY: string;
+		VITE_GROQ_MODEL: string;
+		GROQ_API_KEY: string;
+		GROQ_MODEL: string;
 		CALENDAR_REDIRECT_URI: string;
 		SMTP_PASS: string;
 		UPLOAD_PATH: string;
@@ -238,7 +247,6 @@ declare module '$env/dynamic/private' {
 		ORIGINAL_XDG_CURRENT_DESKTOP: string;
 		MallocNanoZone: string;
 		COLOR: string;
-		VIPSHOME: string;
 		npm_config_noproxy: string;
 		npm_config_local_prefix: string;
 		ENABLE_IDE_INTEGRATION: string;
@@ -259,6 +267,7 @@ declare module '$env/dynamic/private' {
 		PATH: string;
 		npm_package_json: string;
 		_: string;
+		LaunchInstanceID: string;
 		npm_config_userconfig: string;
 		npm_config_init_module: string;
 		USER_ZDOTDIR: string;
@@ -295,6 +304,7 @@ declare module '$env/dynamic/private' {
 		INFOPATH: string;
 		HOMEBREW_CELLAR: string;
 		CLAUDECODE: string;
+		SECURITYSESSIONID: string;
 		npm_node_execpath: string;
 		npm_config_prefix: string;
 		COLORTERM: string;
