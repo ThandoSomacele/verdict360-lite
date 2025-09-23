@@ -1,9 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { AIService } from '$lib/services/aiService';
+import { aiService } from '$lib/services/aiService';
 import type { ChatMessage } from '$lib/types';
-
-const aiService = new AIService();
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   try {
