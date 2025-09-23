@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 export default {
   development: {
     client: 'postgresql',
-    connection: {
+    connection: process.env.DATABASE_URL || {
       host: process.env.DB_HOST || 'localhost',
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME || 'verdict360_dev',
@@ -54,7 +54,7 @@ export default {
 
   production: {
     client: 'postgresql',
-    connection: {
+    connection: process.env.DATABASE_URL || {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME,
