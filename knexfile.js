@@ -1,2 +1,2 @@
-import config from './src/server/config/database.js';
+import config from './src/lib/server/config/database';
 export default config;

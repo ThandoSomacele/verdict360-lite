@@ -1,5 +1,5 @@
 import knex from 'knex';
-import config from '../../server/config/database.js';
+import config from './config/database';
 
 let db: any = null;
 

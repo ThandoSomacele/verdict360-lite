@@ -2,10 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { aiService } from '$lib/services/aiService';
 import { db } from '$lib/server/database';
-
-function generateId(): string {
-  return `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-}
+import { v4 as uuidv4 } from 'uuid';
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -25,13 +22,13 @@ export const POST: RequestHandler = async ({ request }) => {
 
     if (!conversation) {
       // Create new conversation
-      const newConversationId = conversationId || generateId();
+      const newConversationId = conversationId || uuidv4();
       const tenantId = request.headers.get('X-Tenant-Id') || '11111111-1111-1111-1111-111111111111';
 
       await db('conversations').insert({
         id: newConversationId,
         tenant_id: tenantId,
-        visitor_id: generateId(),
+        visitor_id: uuidv4(),
         status: 'active',
         started_at: new Date(),
         message_count: 0,
@@ -43,10 +40,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
     // Save user message
     await db('messages').insert({
-      id: generateId(),
+      id: uuidv4(),
       conversation_id: conversation.id,
-      sender: 'user',
+      sender_type: 'visitor',
       content: message,
+      sent_at: new Date(),
       created_at: new Date(),
       updated_at: new Date()
     });
@@ -67,11 +65,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
     // Save AI response
     await db('messages').insert({
-      id: generateId(),
+      id: uuidv4(),
       conversation_id: conversation.id,
-      sender: 'ai',
+      sender_type: 'bot',
       content: aiResponse.response,
       metadata: aiResponse.metadata,
+      sent_at: new Date(),
       created_at: new Date(),
       updated_at: new Date()
     });

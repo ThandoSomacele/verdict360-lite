@@ -14,13 +14,20 @@ interface ChatResponse {
 class GroqService {
   private groq: Groq | null = null;
   private isInitialized = false;
+  private initializationAttempted = false;
 
   constructor() {
-    this.initialize();
+    // Don't initialize in constructor to avoid import.meta.env access during build
   }
 
   private initialize() {
-    const apiKey = process.env.GROQ_API_KEY;
+    if (this.initializationAttempted) return;
+    this.initializationAttempted = true;
+
+    // Try different ways to get the API key
+    const apiKey = process.env.GROQ_API_KEY ||
+                   process.env.VITE_GROQ_API_KEY ||
+                   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_API_KEY);
 
     if (!apiKey) {
       console.warn('Groq API key not configured. AI features will be limited.');
@@ -39,6 +46,11 @@ class GroqService {
   }
 
   async chat(messages: ChatMessage[]): Promise<ChatResponse> {
+    // Lazy initialization
+    if (!this.initializationAttempted) {
+      this.initialize();
+    }
+
     if (!this.isInitialized || !this.groq) {
       return {
         success: false,
@@ -61,7 +73,10 @@ class GroqService {
 
       const completion = await this.groq.chat.completions.create({
         messages: allMessages,
-        model: process.env.GROQ_MODEL || 'llama-3.2-3b-preview',
+        model: process.env.GROQ_MODEL ||
+               process.env.VITE_GROQ_MODEL ||
+               (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_MODEL) ||
+               'llama-3.1-8b-instant',
         temperature: 0.7,
         max_tokens: 1000,
         top_p: 1,
@@ -108,6 +123,10 @@ class GroqService {
   }
 
   isAvailable(): boolean {
+    // Lazy initialization
+    if (!this.initializationAttempted) {
+      this.initialize();
+    }
     return this.isInitialized;
   }
 }
