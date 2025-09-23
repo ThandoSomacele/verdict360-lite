@@ -56,41 +56,50 @@
   });
 
   async function initializeSocket() {
+    // Socket.io is optional - only initialize if available
+    // This allows the chat to work on serverless platforms like Vercel
     if (typeof window !== 'undefined') {
-      const { io } = await import('socket.io-client');
-      socket = io('/', {
-        transports: ['websocket', 'polling']
-      });
-      
-      socket.on('connect', handleConnect);
-      socket.on('ai-response', handleAIResponse);
-      socket.on('typing', handleTyping);
-      socket.on('contact-submitted', handleContactSubmitted);
-      socket.on('disconnect', handleDisconnect);
+      try {
+        const { io } = await import('socket.io-client');
+        socket = io('/', {
+          transports: ['websocket', 'polling']
+        });
+
+        socket.on('connect', handleConnect);
+        socket.on('ai-response', handleAIResponse);
+        socket.on('typing', handleTyping);
+        socket.on('contact-submitted', handleContactSubmitted);
+        socket.on('disconnect', handleDisconnect);
+      } catch (error) {
+        console.log('Socket.io not available, using HTTP API fallback');
+        // Chat will work via HTTP API instead
+      }
     }
   }
   
   async function initializeChat() {
-    if (!mounted || !socket) return;
-    
+    if (!mounted) return;
+
     try {
       isLoading = true;
-      
+
       // Get tenant info
       const tenantRes = await fetch('/api/tenants/current', {
         headers: { 'X-Tenant-Id': tenantId }
       });
       tenant = await tenantRes.json();
-      
-      // Join tenant-specific room
-      socket.emit('join-tenant', tenantId);
-      
+
+      // Join tenant-specific room if socket is available
+      if (socket) {
+        socket.emit('join-tenant', tenantId);
+      }
+
       // Get welcome message
       const welcomeRes = await fetch('/api/ai/welcome', {
         headers: { 'X-Tenant-Id': tenantId }
       });
       const welcome = await welcomeRes.json();
-      
+
       // Add welcome message
       const welcomeMessage: ChatMessageType = {
         id: `welcome_${Date.now()}`,
@@ -101,10 +110,10 @@
         tenantId,
         metadata: welcome.metadata
       };
-      
+
       messages = [...messages, welcomeMessage];
       scrollToBottom();
-      
+
     } catch (error) {
       console.error('Chat initialization failed:', error);
     } finally {
@@ -175,7 +184,7 @@
   }
   
   async function sendMessage(content: string) {
-    if (!socket || !content.trim()) return;
+    if (!content.trim()) return;
 
     // Add user message immediately
     const userMessage: ChatMessageType = {
@@ -198,46 +207,115 @@
       scrollToBottom();
     }, 3000);
 
-    // Send typing indicator to other clients
-    socket.emit('typing', { isTyping: true, tenantId });
+    try {
+      // Send message via HTTP API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify({
+          message: content.trim(),
+          conversationId: sessionStorage.getItem('conversationId') || undefined
+        })
+      });
 
-    // Get conversation history
-    let conversationHistory: ChatMessageType[] = messages.slice(-10); // Keep last 10 messages
+      const data = await response.json();
 
-    // Send message via socket
-    socket.emit('chat-message', {
-      message: content.trim(),
-      conversationHistory,
-      tenantId
-    });
+      if (data.success && data.response) {
+        // Store conversation ID for future messages
+        if (data.conversationId) {
+          sessionStorage.setItem('conversationId', data.conversationId);
+        }
 
-    // Stop typing indicator after sending
-    setTimeout(() => {
-      socket.emit('typing', { isTyping: false, tenantId });
-    }, 1000);
+        // Create AI message
+        const aiMessage: ChatMessageType = {
+          id: `ai_${Date.now()}`,
+          content: data.response,
+          sender: 'ai',
+          senderType: 'bot',
+          sentAt: new Date().toISOString(),
+          tenantId,
+          metadata: data.metadata
+        };
+
+        // Handle the AI response with typing delay
+        handleAIResponse(aiMessage);
+      } else {
+        throw new Error(data.error || 'Failed to get response');
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+
+      // Stop typing indicator on error
+      isTyping = false;
+      typingUser = null;
+
+      // Add error message
+      const errorMessage: ChatMessageType = {
+        id: `error_${Date.now()}`,
+        content: 'I apologize, but I encountered an error. Please try again.',
+        sender: 'ai',
+        senderType: 'bot',
+        sentAt: new Date().toISOString(),
+        tenantId
+      };
+
+      messages = [...messages, errorMessage];
+      scrollToBottom();
+    }
   }
 
   async function submitContactForm(contactInfo: any) {
-    if (!socket) return;
+    try {
+      // Use HTTP API for contact submission
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify({
+          ...contactInfo,
+          conversationId: sessionStorage.getItem('conversationId') || undefined
+        })
+      });
 
-    socket.emit('submit-contact', {
-      contactInfo,
-      tenantId
-    });
+      const data = await response.json();
 
-    // Add a success message to the chat
-    const confirmationMessage: ChatMessageType = {
-      id: `confirmation_${Date.now()}`,
-      content: 'Thank you for your information. An attorney will contact you shortly.',
-      sender: 'ai',
-      senderType: 'bot',
-      sentAt: new Date().toISOString(),
-      tenantId
-    };
+      if (data.success) {
+        // Add a success message to the chat
+        const confirmationMessage: ChatMessageType = {
+          id: `confirmation_${Date.now()}`,
+          content: 'Thank you for your information. An attorney will contact you shortly.',
+          sender: 'ai',
+          senderType: 'bot',
+          sentAt: new Date().toISOString(),
+          tenantId
+        };
 
-    messages = [...messages, confirmationMessage];
-    showContactForm = false;
-    scrollToBottom();
+        messages = [...messages, confirmationMessage];
+        showContactForm = false;
+        scrollToBottom();
+      } else {
+        throw new Error(data.error || 'Failed to submit contact information');
+      }
+    } catch (error) {
+      console.error('Failed to submit contact form:', error);
+      // Show error message
+      const errorMessage: ChatMessageType = {
+        id: `error_${Date.now()}`,
+        content: 'There was an error submitting your information. Please try again.',
+        sender: 'ai',
+        senderType: 'bot',
+        sentAt: new Date().toISOString(),
+        tenantId
+      };
+
+      messages = [...messages, errorMessage];
+      scrollToBottom();
+    }
   }
   
   function toggleChat() {

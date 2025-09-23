@@ -1,8 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { AIService } from '$lib/services/aiService';
-
-const aiService = new AIService();
+import { aiService } from '$lib/services/aiService';
 
 export const GET: RequestHandler = async ({ locals }) => {
   try {

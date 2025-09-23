@@ -74,7 +74,7 @@ ALWAYS:
 - Never claim to have user information unless explicitly provided
 - Always ask for ALL contact details (name, email, phone)`;
 
-export class AIService {
+class AIService {
   private model: string;
   private baseUrl: string;
 
@@ -293,3 +293,5 @@ export class AIService {
     };
   }
 }
+
+export const aiService = new AIService();
