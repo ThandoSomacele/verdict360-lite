@@ -36,11 +36,18 @@
   let isButtonAnimating = $state(false);
   let hasPlayedSound = $state(false);
   let typingStartTime = $state<number>(0);
-  let audioContext = $state<AudioContext | null>(null);
+  let notificationAudio = $state<HTMLAudioElement | null>(null);
 
   onMount(async () => {
     mounted = true;
     await initializeSocket();
+
+    // Preload the notification sound
+    if (typeof window !== 'undefined') {
+      notificationAudio = new Audio('/sounds/notification.mp3');
+      notificationAudio.volume = 0.5; // Set moderate volume
+      notificationAudio.preload = 'auto';
+    }
 
     // Only animate the button (no sound due to autoplay restrictions)
     setTimeout(() => {
@@ -330,15 +337,6 @@
   function toggleChat() {
     isOpen = !isOpen;
     if (isOpen) {
-      // Initialize AudioContext on first user interaction
-      if (!audioContext && typeof window !== 'undefined') {
-        try {
-          audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        } catch (error) {
-          console.log('Could not create AudioContext:', error);
-        }
-      }
-
       if (!tenant) {
         initializeChat();
       }
@@ -349,26 +347,18 @@
   }
 
   function playNotificationSound() {
-    if (hasPlayedSound || !audioContext) return; // Don't play if already played or no context
+    if (hasPlayedSound || !notificationAudio) return; // Don't play if already played or no audio element
 
     try {
-      // Create a simple beep sound using Web Audio API
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.value = 800; // Frequency in Hz
-      oscillator.type = 'sine';
-
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
-
-      hasPlayedSound = true;
+      // Play the MP3 notification sound
+      notificationAudio.play()
+        .then(() => {
+          hasPlayedSound = true;
+        })
+        .catch((error) => {
+          // Silently handle error if audio can't play
+          console.log('Could not play notification sound:', error);
+        });
     } catch (error) {
       console.log('Could not play notification sound:', error);
     }
