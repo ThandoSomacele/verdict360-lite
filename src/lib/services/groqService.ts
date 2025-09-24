@@ -25,9 +25,9 @@ class GroqService {
     this.initializationAttempted = true;
 
     // Try different ways to get the API key
-    const apiKey = process.env.GROQ_API_KEY ||
+    const apiKey = (process.env.GROQ_API_KEY ||
                    process.env.VITE_GROQ_API_KEY ||
-                   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_API_KEY);
+                   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_API_KEY) || '')?.trim();
 
     if (!apiKey) {
       console.warn('Groq API key not configured. AI features will be limited.');
@@ -36,7 +36,7 @@ class GroqService {
 
     try {
       this.groq = new Groq({
-        apiKey: apiKey.trim() // Trim whitespace and newlines
+        apiKey: apiKey // Already trimmed above
       });
       this.isInitialized = true;
       console.log('Groq AI service initialized successfully');
@@ -71,12 +71,14 @@ class GroqService {
 
       const allMessages = [systemMessage, ...messages];
 
+      const modelName = (process.env.GROQ_MODEL ||
+                        process.env.VITE_GROQ_MODEL ||
+                        (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_MODEL) ||
+                        'llama-3.1-8b-instant').trim(); // Trim to remove any whitespace/newlines
+
       const completion = await this.groq.chat.completions.create({
         messages: allMessages,
-        model: process.env.GROQ_MODEL ||
-               process.env.VITE_GROQ_MODEL ||
-               (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_MODEL) ||
-               'llama-3.1-8b-instant',
+        model: modelName,
         temperature: 0.7,
         max_tokens: 1000,
         top_p: 1,
