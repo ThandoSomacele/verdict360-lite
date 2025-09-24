@@ -1,12 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
+import { db } from '$lib/server/database';
 
 function generateId(): string {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
-
-// In-memory storage for demo (resets on deploy)
-const leads = new Map<string, any>();
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -15,8 +13,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
     const leadId = generateId();
 
-    // Store lead in memory for demo
-    const lead = {
+    // Save lead to database
+    await db('leads').insert({
       id: leadId,
       tenant_id: tenantId,
       name: data.name,
@@ -25,22 +23,19 @@ export const POST: RequestHandler = async ({ request }) => {
       enquiry: data.enquiry || data.message || '',
       source: 'chat_widget',
       status: 'new',
-      conversation_id: data.conversationId,
       created_at: new Date(),
       updated_at: new Date()
-    };
-
-    // Store in memory
-    leads.set(leadId, lead);
-
-    // Log for demo purposes
-    console.log('New lead received:', {
-      id: leadId,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      enquiry: data.enquiry || data.message
     });
+
+    // If there's a conversation ID, update the conversation with the lead ID
+    if (data.conversationId) {
+      await db('conversations')
+        .where('id', data.conversationId)
+        .update({
+          lead_id: leadId,
+          updated_at: new Date()
+        });
+    }
 
     return json({
       success: true,

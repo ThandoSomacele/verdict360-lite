@@ -36,7 +36,7 @@ class GroqService {
 
     try {
       this.groq = new Groq({
-        apiKey: apiKey
+        apiKey: apiKey.trim() // Trim whitespace and newlines
       });
       this.isInitialized = true;
       console.log('Groq AI service initialized successfully');
