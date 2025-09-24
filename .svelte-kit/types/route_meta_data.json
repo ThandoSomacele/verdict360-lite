@@ -75,6 +75,9 @@
 	"/api/tenants/register": [
 		"src/routes/api/tenants/register/+server.ts"
 	],
+	"/api/test-db": [
+		"src/routes/api/test-db/+server.ts"
+	],
 	"/contact": [],
 	"/dashboard": [],
 	"/dashboard/ai-settings": [],
