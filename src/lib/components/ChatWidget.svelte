@@ -36,15 +36,15 @@
   let isButtonAnimating = $state(false);
   let hasPlayedSound = $state(false);
   let typingStartTime = $state<number>(0);
-  
+  let audioContext = $state<AudioContext | null>(null);
+
   onMount(async () => {
     mounted = true;
     await initializeSocket();
-    
-    // Play notification sound after a delay to draw attention
+
+    // Only animate the button (no sound due to autoplay restrictions)
     setTimeout(() => {
-      playNotificationSound();
-      // Also add a subtle animation to the chat button
+      // Just animate the button to draw attention
       animateChatButton();
     }, 3000); // Wait 3 seconds after page load
   });
@@ -329,32 +329,45 @@
   
   function toggleChat() {
     isOpen = !isOpen;
-    if (isOpen && !tenant) {
-      initializeChat();
+    if (isOpen) {
+      // Initialize AudioContext on first user interaction
+      if (!audioContext && typeof window !== 'undefined') {
+        try {
+          audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (error) {
+          console.log('Could not create AudioContext:', error);
+        }
+      }
+
+      if (!tenant) {
+        initializeChat();
+      }
+
+      // Play sound on open (user interaction allows it)
+      playNotificationSound();
     }
   }
-  
+
   function playNotificationSound() {
-    if (hasPlayedSound || isOpen) return; // Don't play if already played or chat is open
-    
+    if (hasPlayedSound || !audioContext) return; // Don't play if already played or no context
+
     try {
       // Create a simple beep sound using Web Audio API
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.value = 800; // Frequency in Hz
       oscillator.type = 'sine';
-      
+
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
+
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
-      
+
       hasPlayedSound = true;
     } catch (error) {
       console.log('Could not play notification sound:', error);
