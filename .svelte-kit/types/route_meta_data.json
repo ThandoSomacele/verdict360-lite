@@ -78,6 +78,9 @@
 	"/api/test-db": [
 		"src/routes/api/test-db/+server.ts"
 	],
+	"/api/test-schema": [
+		"src/routes/api/test-schema/+server.ts"
+	],
 	"/contact": [],
 	"/dashboard": [],
 	"/dashboard/ai-settings": [],
