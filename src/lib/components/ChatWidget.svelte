@@ -56,9 +56,18 @@
   });
 
   async function initializeSocket() {
-    // Socket.io is optional - only initialize if available
-    // This allows the chat to work on serverless platforms like Vercel
-    if (typeof window !== 'undefined') {
+    // Socket.io is disabled in production (Vercel) as it doesn't support WebSockets
+    // Use HTTP API for all chat functionality instead
+    const isProduction = import.meta.env.MODE === 'production' ||
+                         window.location.hostname.includes('vercel.app');
+
+    if (isProduction) {
+      console.log('Running in production mode - using HTTP API for chat');
+      return;
+    }
+
+    // Socket.io is optional - only initialize if available in development
+    if (typeof window !== 'undefined' && import.meta.env.DEV) {
       try {
         const { io } = await import('socket.io-client');
         socket = io('/', {
