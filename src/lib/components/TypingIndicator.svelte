@@ -45,21 +45,51 @@
       transform: translateY(0px) scale(1);
       opacity: 0.6;
     }
-    15% {
-      transform: translateY(3px) scale(1.2);
+    40% {
+      transform: translateY(-6px) scale(1.1);
       opacity: 1;
     }
   }
-  
-  .typing-dot {
-    animation: keyPress 2s infinite;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-  
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .typing-dot {
+    animation: keyPress 1.4s infinite ease-in-out;
+  }
+
   .typing-dot-2 {
+    animation-delay: 0.15s;
+  }
+
+  .typing-dot-3 {
     animation-delay: 0.3s;
   }
-  
-  .typing-dot-3 {
-    animation-delay: 0.6s;
+
+  :global(.typing-indicator) {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  :global(.typing-indicator.fade-out) {
+    animation: fadeOut 0.2s ease-out forwards;
   }
 </style>

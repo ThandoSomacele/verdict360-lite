@@ -146,12 +146,6 @@
           >
             Simple iframe
           </button>
-          <button
-            on:click={() => activeTab = 'react'}
-            class="pb-2 px-1 border-b-2 transition-colors {activeTab === 'react' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}"
-          >
-            React/Next.js
-          </button>
         </div>
 
         <!-- Standard Website -->
@@ -227,35 +221,6 @@
           </div>
         {/if}
 
-        <!-- React -->
-        {#if activeTab === 'react'}
-          <div class="space-y-4">
-            <h3 class="font-semibold">React/Next.js Component</h3>
-            <p class="text-sm text-gray-600 mb-4">Install our npm package:</p>
-            <div class="bg-gray-900 text-gray-300 p-3 rounded-lg mb-4">
-              <code>npm install @verdict360/chat-widget</code>
-            </div>
-            <p class="text-sm text-gray-600 mb-4">Then import and use the component:</p>
-            <div class="relative">
-              <pre class="bg-gray-900 text-gray-300 p-4 rounded-lg overflow-x-auto text-sm">
-                <code>{`import { ChatWidget } from '@verdict360/chat-widget';
-
-function App() {
-  return (
-    <>
-      {/* Your app content */}
-      <ChatWidget
-        tenantId="${tenantId}"
-        position="bottom-right"
-        primaryColor="#3b82f6"
-      />
-    </>
-  );
-}`}</code>
-              </pre>
-            </div>
-          </div>
-        {/if}
       </CardContent>
     </Card>
 

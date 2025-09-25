@@ -146,31 +146,43 @@
   }
   
   function handleAIResponse(message: ChatMessageType) {
-    // Typing indicator was shown immediately when user sent message
     // Calculate dynamic typing delay based on message length for natural feel
     const wordCount = message.content.split(' ').length;
-    // 1.5 seconds minimum + 50ms per word, max 4 seconds
-    const minimumTypingDelay = Math.min(1500 + (wordCount * 50), 4000);
+    // More realistic typing speed: 30-40ms per character (average typing speed)
+    const charCount = message.content.length;
+    const typingSpeed = 30 + Math.random() * 10; // 30-40ms per character
+    const calculatedDelay = charCount * typingSpeed;
+    // Ensure minimum 1s, maximum 5s for typing animation
+    const minimumTypingDelay = Math.min(Math.max(calculatedDelay, 1000), 5000);
 
     const currentTime = Date.now();
     const elapsedTime = currentTime - typingStartTime;
     const remainingDelay = Math.max(0, minimumTypingDelay - elapsedTime);
 
-    // Wait for the natural typing duration before showing response
+    // Add a fade-out animation for the typing indicator
     setTimeout(() => {
-      // Stop typing indicator and add the complete message
-      isTyping = false;
-      typingUser = null;
-
-      // Add the complete message instantly
-      messages = [...messages, message];
-      scrollToBottom();
-
-      // Check if AI response should show contact form
-      if (message.metadata?.isDataCollection ||
-          message.metadata?.shouldOfferConsultation) {
-        showContactForm = true;
+      // Add a CSS class for smooth fade-out transition
+      const typingElement = document.querySelector('.typing-indicator');
+      if (typingElement) {
+        typingElement.classList.add('fade-out');
       }
+
+      // Wait for fade animation to complete before removing typing indicator
+      setTimeout(() => {
+        // Stop typing indicator and add the complete message
+        isTyping = false;
+        typingUser = null;
+
+        // Add the complete message instantly
+        messages = [...messages, message];
+        scrollToBottom();
+
+        // Check if AI response should show contact form
+        if (message.metadata?.isDataCollection ||
+            message.metadata?.shouldOfferConsultation) {
+          showContactForm = true;
+        }
+      }, 200); // 200ms for fade-out animation
     }, remainingDelay);
   }
 
@@ -215,13 +227,16 @@
     messages = [...messages, userMessage];
     scrollToBottom();
 
-    // Show typing indicator after 3-second delay
+    // Show typing indicator after a more natural delay (500ms to 1s)
+    // This simulates the bot "reading" the message and starting to type
+    const readingDelay = 500 + Math.random() * 500; // 500-1000ms random delay
+
     setTimeout(() => {
       isTyping = true;
       typingUser = 'Sarah';
       typingStartTime = Date.now(); // Track when typing started
       scrollToBottom();
-    }, 3000);
+    }, readingDelay);
 
     try {
       // Send message via HTTP API
@@ -490,7 +505,9 @@
         {/if}
 
         {#if isTyping && typingUser}
-          <TypingIndicator user={typingUser} {theme} />
+          <div class="typing-indicator">
+            <TypingIndicator user={typingUser} {theme} />
+          </div>
         {/if}
       </div>
 
