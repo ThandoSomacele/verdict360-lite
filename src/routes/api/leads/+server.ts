@@ -51,10 +51,12 @@ export const POST: RequestHandler = async ({ request }) => {
   } catch (error) {
     console.error('Error saving lead:', error);
 
-    // Return success even if database fails (for demo purposes)
+    // Return the actual error for debugging
     return json({
-      success: true,
-      message: 'Thank you for your information. An attorney will contact you shortly.'
-    });
+      success: false,
+      message: 'Error saving lead',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: String(error)
+    }, { status: 500 });
   }
 };
