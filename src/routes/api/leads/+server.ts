@@ -14,15 +14,21 @@ export const POST: RequestHandler = async ({ request }) => {
     const leadId = generateId();
 
     // Save lead to database
+    // Split name into first and last name
+    const nameParts = (data.name || '').trim().split(' ');
+    const firstName = nameParts[0] || 'Unknown';
+    const lastName = nameParts.slice(1).join(' ') || 'User';
+
     await db('leads').insert({
       id: leadId,
       tenant_id: tenantId,
-      name: data.name,
+      first_name: firstName,
+      last_name: lastName,
       email: data.email,
       phone: data.phone,
-      enquiry: data.enquiry || data.message || '',
-      source: 'chat_widget',
+      legal_issue: data.enquiry || data.message || data.enquiryDetails || '',
       status: 'new',
+      metadata: JSON.stringify({ source: 'chat_widget', additional_message: data.additionalMessage }),
       created_at: new Date(),
       updated_at: new Date()
     });
