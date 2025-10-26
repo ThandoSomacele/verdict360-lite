@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  
+  import { page } from '$app/state';
+
   let mobileMenuOpen = $state(false);
-  
+
   function toggleMobileMenu() {
     mobileMenuOpen = !mobileMenuOpen;
   }
@@ -15,22 +15,22 @@
       <a href="/" class="flex items-center space-x-2">
         <span class="text-2xl font-bold text-blue-600">Verdict 360</span>
       </a>
-      
+
       <!-- Desktop Navigation -->
       <div class="hidden md:flex items-center space-x-8">
-        <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={$page.url.pathname === '/'}>
+        <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={page.url.pathname === '/'}>
           Home
         </a>
-        <a href="/demo" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={$page.url.pathname === '/demo'}>
+        <a href="/demo" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={page.url.pathname === '/demo'}>
           Demo
         </a>
-        <a href="/pricing" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={$page.url.pathname === '/pricing'}>
+        <a href="/pricing" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={page.url.pathname === '/pricing'}>
           Pricing
         </a>
-        <a href="/about" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={$page.url.pathname === '/about'}>
+        <a href="/about" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={page.url.pathname === '/about'}>
           About
         </a>
-        <a href="/contact" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={$page.url.pathname === '/contact'}>
+        <a href="/contact" class="text-gray-700 hover:text-blue-600 transition-colors" class:text-blue-600={page.url.pathname === '/contact'}>
           Contact
         </a>
       </div>

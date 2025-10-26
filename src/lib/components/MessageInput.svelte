@@ -1,26 +1,24 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  
   interface Props {
     disabled?: boolean;
     theme?: 'light' | 'dark';
     placeholder?: string;
+    onsend?: (message: string) => void;
   }
-  
-  let { 
+
+  let {
     disabled = false,
     theme = 'light',
-    placeholder = 'Type your message...'
+    placeholder = 'Type your message...',
+    onsend
   }: Props = $props();
-  
-  const dispatch = createEventDispatcher<{ send: string }>();
-  
+
   let message = $state('');
   let textArea: HTMLTextAreaElement;
-  
+
   function handleSubmit() {
     if (message.trim() && !disabled) {
-      dispatch('send', message.trim());
+      onsend?.(message.trim());
       message = '';
       adjustHeight();
     }

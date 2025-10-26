@@ -2,12 +2,12 @@
   import '../app.css';
   import Header from '$lib/components/Header.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { initializeSeedData } from '$lib/utils/seedData';
 
   // Don't show header/footer on admin pages
-  let showLayout = $derived(!$page.url.pathname.startsWith('/admin'));
+  let showLayout = $derived(!page.url.pathname.startsWith('/admin'));
 
   let { children } = $props();
 

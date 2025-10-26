@@ -512,8 +512,8 @@
       </div>
 
       <!-- Input -->
-      <MessageInput 
-        on:send={e => sendMessage(e.detail)} 
+      <MessageInput
+        onsend={sendMessage}
         disabled={isLoading}
         {theme}
         placeholder="Type your legal enquiry..."
