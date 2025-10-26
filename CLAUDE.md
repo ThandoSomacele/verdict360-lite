@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Commands
 
 ### Development
+
 - `npm run dev` - Start both client and server in development mode (client on :3001, server on :3000)
 - `npm run server:dev` - Start only the backend server with nodemon
 - `npm run client:dev` - Start only the React frontend
@@ -12,11 +13,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run start` - Start production server from dist/
 
 ### Database Operations
+
 - `npm run db:migrate` - Run pending Knex migrations
 - `npm run db:seed` - Seed database with sample data
 - `npm run db:rollback` - Rollback the last migration batch
 
 ### Code Quality
+
 - `npm run lint` - Run ESLint on src/ directory
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run typecheck` - Run TypeScript type checking without emitting files
@@ -26,6 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Overview
 
 ### Multi-Tenant SaaS Platform
+
 This is a multi-tenant SaaS platform for AI chatbots serving South African law firms. Each law firm is an isolated tenant with:
 
 - **Data Isolation**: Separate database schemas/namespaces per tenant
@@ -34,6 +38,7 @@ This is a multi-tenant SaaS platform for AI chatbots serving South African law f
 - **Individual Analytics**: Per-tenant dashboards and metrics
 
 ### Core Technology Stack
+
 - **Framework**: SvelteKit 2.0 for full-stack development
 - **Backend**: Express.js with PostgreSQL (Knex.js ORM) and Redis caching
 - **Frontend**: Svelte 5 with Tailwind CSS (migrated from React)
@@ -44,6 +49,7 @@ This is a multi-tenant SaaS platform for AI chatbots serving South African law f
 - **Email**: Nodemailer for notifications and calendar invites
 
 ### Key Integration Points
+
 - **Calendar Sync**: Google Calendar API for consultation booking
 - **Rate Limiting**: rate-limiter-flexible for API protection
 - **File Uploads**: Multer with configurable storage
@@ -51,6 +57,7 @@ This is a multi-tenant SaaS platform for AI chatbots serving South African law f
 - **Validation**: Joi for request/response validation
 
 ### Application Structure
+
 - **src/sveltekit/**: SvelteKit application
   - `routes/`: Page components and API endpoints
     - `[tenant]/`: Dynamic tenant routes for multi-tenant support
@@ -68,7 +75,9 @@ This is a multi-tenant SaaS platform for AI chatbots serving South African law f
   - `config/`: Database and service configurations
 
 ### Environment Configuration
+
 The application requires extensive environment configuration for:
+
 - Database connections (PostgreSQL)
 - Redis caching
 - AI model endpoints (Ollama)
@@ -77,6 +86,7 @@ The application requires extensive environment configuration for:
 - Security tokens and secrets
 
 ### Development Workflow
+
 1. Set up local PostgreSQL and Redis instances
 2. Copy `.env.example` to `.env` and configure
 3. Run `npm run db:migrate && npm run db:seed` for database setup
@@ -85,7 +95,9 @@ The application requires extensive environment configuration for:
 6. Run `npm run check` to validate SvelteKit configuration
 
 ### Multi-Tenant Considerations
+
 When working with this codebase:
+
 - All database queries must include tenant context
 - API routes should resolve tenant from subdomain or header
 - Frontend components should support tenant-specific branding
@@ -96,13 +108,16 @@ When working with this codebase:
 ## Visual Development
 
 ## Design Principles
+
 - Comprehensive design checklist in `/context/design-principles.md`
 - Brand style guide in `/context/style-guide.md`
 - Design review agent configuration in `/context/design-review-agent.md`
 - When making visual (front-end, UI/UX) changes, always refer to these files for guidance
 
 ### Quick Visual Check
+
 IMMEDIATELY after implementing any front-end change:
+
 1. **Identify what changed** - Review the modified components/pages
 2. **Navigate to affected pages** - Use `mcp_playwright_browser_navigate` to visit each changed view
 3. **Verify design compliance** - Compare against `/context/design-principles.md` and `/context/style-guide.md`
@@ -114,12 +129,15 @@ IMMEDIATELY after implementing any front-end change:
 This verification ensures changes meet design standards and user requirements.
 
 ### Comprehensive Design Review
+
 Invoke the `@agent-design-review` subagent for thorough design validation when:
+
 - Completing significant UI/UX features
 - Before finalizing PRs with visual changes
 - Needing comprehensive accessibility and responsiveness testing
 
 ### shadcn/ui Components
+
 - Modern component library built on Radix UI primitives
 - Tailwind CSS v4 with CSS variables for theming
 - Lucide icons throughout
