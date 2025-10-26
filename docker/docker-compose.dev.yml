@@ -1,5 +1,4 @@
-# Development version with easier setup and hot reload
-
+# Development version with hot reload for SvelteKit
 services:
   # PostgreSQL Database
   postgres:
@@ -8,26 +7,36 @@ services:
     environment:
       POSTGRES_DB: verdict360_dev
       POSTGRES_USER: verdict360_user
-      POSTGRES_PASSWORD: verdict360_password
+      POSTGRES_PASSWORD: verdict360_dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Different port to avoid conflicts with local postgres
     networks:
       - verdict360-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdict360_user -d verdict360_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: verdict360-redis-dev
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass verdict360_redis_dev_password
     volumes:
       - redis_dev_data:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"  # Different port to avoid conflicts with local redis
     networks:
       - verdict360-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Ollama AI Service
   ollama:
@@ -36,65 +45,94 @@ services:
     volumes:
       - ollama_dev_data:/root/.ollama
     ports:
-      - "11434:11434"
+      - "11435:11434"  # Different port to avoid conflicts with local ollama
     networks:
       - verdict360-dev-network
     environment:
       - OLLAMA_KEEP_ALIVE=24h
       - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # Development App (with hot reload)
-  app-dev:
+  # Main Application (Development with hot reload)
+  app:
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      context: ..
+      dockerfile: docker/Dockerfile.dev
     container_name: verdict360-app-dev
     environment:
+      # Application
+      NODE_ENV: development
+      PORT: 3000
+      CLIENT_URL: http://localhost:3001
+
       # Database
+      DATABASE_URL: postgresql://verdict360_user:verdict360_dev_password@postgres:5432/verdict360_dev
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: verdict360_dev
       DB_USER: verdict360_user
-      DB_PASSWORD: verdict360_password
-      
+      DB_PASSWORD: verdict360_dev_password
+
       # Redis
+      REDIS_URL: redis://:verdict360_redis_dev_password@redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      
+      REDIS_PASSWORD: verdict360_redis_dev_password
+
       # AI Service
-      OLLAMA_BASE_URL: http://ollama:11434
-      AI_MODEL: llama3.1:8b
-      
-      # Application
-      NODE_ENV: development
-      PORT: 3000
-      
-      # Client configuration  
-      REACT_APP_API_URL: http://localhost:3001/api
-      
-      # JWT
-      JWT_SECRET: dev_jwt_secret_for_docker
-      JWT_REFRESH_SECRET: dev_refresh_secret_for_docker
-      
-      # Default tenant
+      AI_ENDPOINT: http://ollama:11434
+      AI_MODEL: llama3.1
+      AI_MAX_TOKENS: 2000
+      AI_TEMPERATURE: 0.7
+
+      # JWT Secrets (dev only)
+      JWT_SECRET: dev_jwt_secret_not_for_production
+      JWT_REFRESH_SECRET: dev_refresh_secret_not_for_production
+      JWT_EXPIRY: 7d
+      REFRESH_TOKEN_EXPIRY: 30d
+
+      # Email (dev)
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: ${SMTP_USER:-dev@example.com}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-dev-password}
+      EMAIL_FROM: Verdict 360 Dev <dev@verdict360.com>
+
+      # Multi-tenant
       DEFAULT_TENANT: demo
       TENANT_DOMAIN_SUFFIX: .verdict360.local
-      
+
     ports:
-      - "4000:3000"
-      - "4001:3001"  # For React dev server
+      - "3001:3000"  # Map to 3001 to avoid conflicts with local dev server
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/src/client/node_modules
-      - ./logs:/app/logs
+      # Mount source code for hot reload
+      - ..:/app
+      - /app/node_modules  # Prevent overwriting node_modules
+      - /app/.svelte-kit   # Prevent overwriting .svelte-kit
+      - ../logs:/app/logs
+      - ../uploads:/app/uploads
     networks:
       - verdict360-dev-network
     depends_on:
-      - postgres
-      - redis
-      - ollama
-    command: sh -c "npm run server:dev & npm run client:dev:docker & wait"
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    stdin_open: true  # Keep stdin open for interactive debugging
+    tty: true         # Allocate a pseudo-TTY
 
 volumes:
   postgres_dev_data:
@@ -107,3 +145,6 @@ volumes:
 networks:
   verdict360-dev-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

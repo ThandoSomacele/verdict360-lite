@@ -1,4 +1,4 @@
-# Development Dockerfile with hot reload
+# Development Dockerfile with hot reload for SvelteKit
 FROM node:18-alpine
 
 WORKDIR /app
@@ -8,24 +8,22 @@ RUN apk add --no-cache curl
 
 # Copy package files
 COPY package*.json ./
-COPY src/client/package*.json ./src/client/
 
-# Install dependencies
+# Install all dependencies (including dev dependencies)
 RUN npm install
-RUN cd src/client && npm install
 
 # Copy source code (will be overridden by volume mount in dev)
 COPY . .
 
-# Create logs directory
+# Create logs and uploads directories
 RUN mkdir -p logs uploads
 
-# Expose ports
-EXPOSE 3000 3001
+# Expose port for SvelteKit dev server
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:3000/ || exit 1
 
-# Default command (can be overridden)
+# Start SvelteKit development server with HMR
 CMD ["npm", "run", "dev"]
