@@ -8,6 +8,13 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secre
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
+/**
+ * JWT Token Payload Interface
+ *
+ * SECURITY: This payload is encoded in JWTs which can be decoded by anyone.
+ * Only contains non-sensitive user identification data.
+ * Passwords and sensitive PII are never included.
+ */
 interface TokenPayload {
   userId: string;
   email: string;

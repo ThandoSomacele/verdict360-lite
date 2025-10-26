@@ -5,6 +5,25 @@ import type { ChatMessage, AIResponse } from '$lib/types';
 
 const aiService = new AIService();
 
+/**
+ * Validate and sanitize tenant ID to prevent log injection
+ * Only allows alphanumeric characters, hyphens, and underscores
+ */
+function sanitizeTenantId(tenantId: string): string {
+  if (!tenantId || typeof tenantId !== 'string') {
+    throw new Error('Invalid tenant ID');
+  }
+
+  // Only allow safe characters (alphanumeric, hyphen, underscore)
+  const sanitized = tenantId.replace(/[^a-zA-Z0-9_-]/g, '');
+
+  if (sanitized.length === 0 || sanitized.length > 100) {
+    throw new Error('Invalid tenant ID format');
+  }
+
+  return sanitized;
+}
+
 export function setupSocketIO(server: HTTPServer) {
   const io = new Server(server, {
     cors: {
@@ -21,38 +40,47 @@ export function setupSocketIO(server: HTTPServer) {
     
     // Handle tenant-specific room joining
     socket.on('join-tenant', (tenantId: string) => {
-      const room = `tenant:${tenantId}`;
-      socket.join(room);
-      socket.data.tenantId = tenantId;
-      console.log(`Socket ${socket.id} joined tenant room: ${room}`);
+      try {
+        const safeTenantId = sanitizeTenantId(tenantId);
+        const room = `tenant:${safeTenantId}`;
+        socket.join(room);
+        socket.data.tenantId = safeTenantId;
+        console.log(`Socket ${socket.id} joined tenant room: ${room}`);
+      } catch (error) {
+        console.error('Invalid tenant ID on join-tenant:', error);
+        socket.emit('error', { message: 'Invalid tenant ID' });
+      }
     });
 
     // Handle chat messages
-    socket.on('chat-message', async (data: { 
-      message: string; 
+    socket.on('chat-message', async (data: {
+      message: string;
       conversationHistory?: ChatMessage[];
       tenantId: string;
     }) => {
       try {
         const { message, conversationHistory = [], tenantId } = data;
-        
+
+        // Sanitize tenant ID to prevent log injection
+        const safeTenantId = sanitizeTenantId(tenantId);
+
         // Emit typing indicator
-        socket.to(`tenant:${tenantId}`).emit('typing', { 
-          isTyping: true, 
-          sender: 'ai' 
+        socket.to(`tenant:${safeTenantId}`).emit('typing', {
+          isTyping: true,
+          sender: 'ai'
         });
 
         // Get AI response
         const aiResponse: AIResponse = await aiService.generateResponse(
           message,
           conversationHistory,
-          tenantId
+          safeTenantId
         );
 
         // Stop typing indicator
-        socket.to(`tenant:${tenantId}`).emit('typing', { 
-          isTyping: false, 
-          sender: 'ai' 
+        socket.to(`tenant:${safeTenantId}`).emit('typing', {
+          isTyping: false,
+          sender: 'ai'
         });
 
         // Send AI response back to client
@@ -61,13 +89,13 @@ export function setupSocketIO(server: HTTPServer) {
           content: aiResponse.response,
           sender: 'ai',
           timestamp: new Date(),
-          tenantId,
+          tenantId: safeTenantId,
           metadata: aiResponse.metadata
         });
 
         // Log the conversation (you might want to save to database)
-        console.log(`[${tenantId}] User: ${message}`);
-        console.log(`[${tenantId}] AI: ${aiResponse.response}`);
+        console.log(`[${safeTenantId}] User: ${message}`);
+        console.log(`[${safeTenantId}] AI: ${aiResponse.response}`);
 
       } catch (error) {
         console.error('Socket chat error:', error);
@@ -91,11 +119,16 @@ export function setupSocketIO(server: HTTPServer) {
 
     // Handle typing indicators
     socket.on('typing', (data: { isTyping: boolean; tenantId: string }) => {
-      socket.to(`tenant:${data.tenantId}`).emit('typing', {
-        isTyping: data.isTyping,
-        sender: 'user',
-        socketId: socket.id
-      });
+      try {
+        const safeTenantId = sanitizeTenantId(data.tenantId);
+        socket.to(`tenant:${safeTenantId}`).emit('typing', {
+          isTyping: data.isTyping,
+          sender: 'user',
+          socketId: socket.id
+        });
+      } catch (error) {
+        console.error('Invalid tenant ID in typing indicator:', error);
+      }
     });
 
     // Handle contact form submission
@@ -111,7 +144,10 @@ export function setupSocketIO(server: HTTPServer) {
     }) => {
       try {
         const { contactInfo, tenantId } = data;
-        
+
+        // Sanitize tenant ID to prevent log injection
+        const safeTenantId = sanitizeTenantId(tenantId);
+
         // Here you would typically save to database and trigger calendar booking
         // For now, just acknowledge receipt
         socket.emit('contact-submitted', {
@@ -125,16 +161,16 @@ export function setupSocketIO(server: HTTPServer) {
           content: 'Perfect! I\'ve received your contact information. Our team will reach out within the next business day to schedule your consultation. Is there anything else I can help you with in the meantime?',
           sender: 'ai',
           timestamp: new Date(),
-          tenantId,
+          tenantId: safeTenantId,
           metadata: {
             intent: 'consultation_scheduled',
             shouldOfferConsultation: false,
             isDataCollection: false,
-            tenantId
+            tenantId: safeTenantId
           }
         });
 
-        console.log(`[${tenantId}] Contact form submitted:`, contactInfo);
+        console.log(`[${safeTenantId}] Contact form submitted:`, contactInfo);
 
       } catch (error) {
         console.error('Contact submission error:', error);

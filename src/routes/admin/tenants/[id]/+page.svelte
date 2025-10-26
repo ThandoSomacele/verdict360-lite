@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/state';
   import Card from '$lib/components/ui/card.svelte';
   import CardHeader from '$lib/components/ui/card-header.svelte';
   import CardTitle from '$lib/components/ui/card-title.svelte';
@@ -49,7 +50,7 @@
   let saveStatus = $state('');
   let activeTab = $state('overview');
 
-  let tenantId = $derived($page.params.id);
+  let tenantId = $derived(page.params.id);
 
   onMount(() => {
     fetchTenantDetails();
