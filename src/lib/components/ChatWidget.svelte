@@ -63,22 +63,15 @@
   });
 
   async function initializeSocket() {
-    // Socket.io is disabled in production (Vercel) as it doesn't support WebSockets
-    // Use HTTP API for all chat functionality instead
-    const isProduction = import.meta.env.MODE === 'production' ||
-                         window.location.hostname.includes('vercel.app');
-
-    if (isProduction) {
-      console.log('Running in production mode - using HTTP API for chat');
-      return;
-    }
-
-    // Socket.io is optional - only initialize if available in development
-    if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    // Initialize Socket.io for real-time communication
+    if (typeof window !== 'undefined') {
       try {
         const { io } = await import('socket.io-client');
         socket = io('/', {
-          transports: ['websocket', 'polling']
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionAttempts: 5
         });
 
         socket.on('connect', handleConnect);
@@ -86,9 +79,11 @@
         socket.on('typing', handleTyping);
         socket.on('contact-submitted', handleContactSubmitted);
         socket.on('disconnect', handleDisconnect);
+        socket.on('connect_error', (error) => {
+          console.error('Socket connection error:', error);
+        });
       } catch (error) {
-        console.log('Socket.io not available, using HTTP API fallback');
-        // Chat will work via HTTP API instead
+        console.error('Failed to initialize Socket.io:', error);
       }
     }
   }
@@ -227,19 +222,37 @@
     messages = [...messages, userMessage];
     scrollToBottom();
 
-    // Show typing indicator after a more natural delay (500ms to 1s)
-    // This simulates the bot "reading" the message and starting to type
-    const readingDelay = 500 + Math.random() * 500; // 500-1000ms random delay
+    // Show typing indicator after a natural delay
+    const readingDelay = 500 + Math.random() * 500; // 500-1000ms
 
     setTimeout(() => {
       isTyping = true;
       typingUser = 'Sarah';
-      typingStartTime = Date.now(); // Track when typing started
+      typingStartTime = Date.now();
       scrollToBottom();
     }, readingDelay);
 
+    // Use WebSocket if available, fallback to HTTP
+    if (socket && socket.connected) {
+      try {
+        // Send via WebSocket
+        socket.emit('chat-message', {
+          message: content.trim(),
+          conversationHistory: messages,
+          tenantId
+        });
+      } catch (error) {
+        console.error('WebSocket send failed, falling back to HTTP:', error);
+        await sendMessageViaHTTP(content);
+      }
+    } else {
+      // Fallback to HTTP if socket not connected
+      await sendMessageViaHTTP(content);
+    }
+  }
+
+  async function sendMessageViaHTTP(content: string) {
     try {
-      // Send message via HTTP API
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -255,12 +268,10 @@
       const data = await response.json();
 
       if (data.success && data.response) {
-        // Store conversation ID for future messages
         if (data.conversationId) {
           sessionStorage.setItem('conversationId', data.conversationId);
         }
 
-        // Create AI message
         const aiMessage: ChatMessageType = {
           id: `ai_${Date.now()}`,
           content: data.response,
@@ -271,7 +282,6 @@
           metadata: data.metadata
         };
 
-        // Handle the AI response with typing delay
         handleAIResponse(aiMessage);
       } else {
         throw new Error(data.error || 'Failed to get response');
@@ -279,11 +289,9 @@
     } catch (error) {
       console.error('Failed to send message:', error);
 
-      // Stop typing indicator on error
       isTyping = false;
       typingUser = null;
 
-      // Add error message
       const errorMessage: ChatMessageType = {
         id: `error_${Date.now()}`,
         content: 'I apologize, but I encountered an error. Please try again.',
@@ -300,41 +308,47 @@
 
   async function submitContactForm(contactInfo: any) {
     try {
-      // Use HTTP API for contact submission
-      const response = await fetch('/api/leads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
-        },
-        body: JSON.stringify({
-          ...contactInfo,
-          conversationId: sessionStorage.getItem('conversationId') || undefined
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Add a success message to the chat
-        const confirmationMessage: ChatMessageType = {
-          id: `confirmation_${Date.now()}`,
-          content: 'Thank you for your information. An attorney will contact you shortly.',
-          sender: 'ai',
-          senderType: 'bot',
-          sentAt: new Date().toISOString(),
+      // Use WebSocket if available, fallback to HTTP
+      if (socket && socket.connected) {
+        socket.emit('submit-contact', {
+          contactInfo,
           tenantId
-        };
-
-        messages = [...messages, confirmationMessage];
-        showContactForm = false;
-        scrollToBottom();
+        });
       } else {
-        throw new Error(data.error || 'Failed to submit contact information');
+        // HTTP fallback
+        const response = await fetch('/api/leads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': tenantId
+          },
+          body: JSON.stringify({
+            ...contactInfo,
+            conversationId: sessionStorage.getItem('conversationId') || undefined
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const confirmationMessage: ChatMessageType = {
+            id: `confirmation_${Date.now()}`,
+            content: 'Thank you for your information. An attorney will contact you shortly.',
+            sender: 'ai',
+            senderType: 'bot',
+            sentAt: new Date().toISOString(),
+            tenantId
+          };
+
+          messages = [...messages, confirmationMessage];
+          showContactForm = false;
+          scrollToBottom();
+        } else {
+          throw new Error(data.error || 'Failed to submit contact information');
+        }
       }
     } catch (error) {
       console.error('Failed to submit contact form:', error);
-      // Show error message
       const errorMessage: ChatMessageType = {
         id: `error_${Date.now()}`,
         content: 'There was an error submitting your information. Please try again.',
